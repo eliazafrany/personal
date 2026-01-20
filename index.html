@@ -2,34 +2,307 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Meal Planner">
+  <meta name="apple-mobile-web-app-title" content="Zafrany Meals">
   <meta name="theme-color" content="#0d9488">
-  <title>Kol Family Meal Planner</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Zafrany Family Meal Planner</title>
   <style>
-    * { -webkit-tap-highlight-color: transparent; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; min-height: 100vh; }
+    .container { max-width: 500px; margin: 0 auto; padding: 12px; }
+    .header { text-align: center; margin-bottom: 12px; }
+    .header h1 { font-size: 20px; color: #115e59; }
+    .header p { font-size: 11px; color: #6b7280; }
+    
+    .budget-box { border-radius: 12px; padding: 12px; margin-bottom: 12px; border: 2px solid; }
+    .budget-box.green { background: #dcfce7; border-color: #22c55e; }
+    .budget-box.red { background: #fee2e2; border-color: #ef4444; }
+    .budget-box.yellow { background: #fef9c3; border-color: #eab308; }
+    .budget-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .budget-total { font-size: 24px; font-weight: bold; }
+    .budget-total.green { color: #15803d; }
+    .budget-total.red { color: #dc2626; }
+    .budget-total.yellow { color: #a16207; }
+    
+    .progress-bar { background: #d1d5db; border-radius: 10px; height: 12px; overflow: hidden; margin-bottom: 8px; }
+    .progress-fill { height: 100%; transition: width 0.3s; }
+    .progress-fill.green { background: #22c55e; }
+    .progress-fill.red { background: #ef4444; }
+    .progress-fill.yellow { background: #eab308; }
+    
+    .budget-breakdown { background: rgba(255,255,255,0.6); border-radius: 8px; padding: 8px; font-size: 12px; }
+    .budget-row { display: flex; justify-content: space-between; padding: 2px 0; }
+    .budget-row.total { border-top: 1px solid #ccc; margin-top: 4px; padding-top: 6px; font-weight: bold; color: #0d9488; }
+    
+    .btn-row { display: flex; gap: 8px; margin-top: 8px; }
+    .btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; }
+    .btn-primary { background: #0d9488; color: white; }
+    .btn-secondary { background: #d1d5db; color: #374151; flex: none; padding: 10px 14px; }
+    
+    .export-panel { background: white; border-radius: 12px; padding: 12px; margin-bottom: 12px; border: 2px solid #0d9488; }
+    .export-panel h3 { font-size: 14px; color: #0d9488; margin-bottom: 8px; }
+    .export-days { max-height: 120px; overflow-y: auto; margin-bottom: 10px; }
+    .export-day-row { display: flex; align-items: center; gap: 6px; font-size: 12px; background: #f9fafb; padding: 6px; border-radius: 6px; margin-bottom: 4px; }
+    .export-day-row span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .export-day-row select { font-size: 11px; padding: 4px; border: 1px solid #d1d5db; border-radius: 4px; }
+    .export-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .export-btn { padding: 10px; border: none; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; }
+    .export-btn.blue { background: #dbeafe; color: #1d4ed8; }
+    .export-btn.orange { background: #ffedd5; color: #c2410c; }
+    .export-btn.green { background: #dcfce7; color: #15803d; }
+    .export-btn.purple { background: #f3e8ff; color: #7c3aed; }
+    
+    .weekly-section { border-radius: 12px; padding: 10px; margin-bottom: 10px; border: 1px solid; }
+    .weekly-section.breakfast { background: #fef3c7; border-color: #f59e0b; }
+    .weekly-section.school { background: #dbeafe; border-color: #3b82f6; }
+    .weekly-section.shabbos { background: #fefce8; border-color: #fcd34d; }
+    .weekly-section.pantry { background: #f3e8ff; border-color: #a855f7; }
+    
+    .section-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .section-header-row h3 { font-size: 13px; font-weight: bold; }
+    .section-header-row .cost { font-weight: bold; font-size: 13px; }
+    
+    .weekly-items { display: flex; flex-direction: column; gap: 4px; }
+    .weekly-item { display: flex; align-items: center; gap: 6px; font-size: 11px; background: rgba(255,255,255,0.7); padding: 5px 8px; border-radius: 6px; cursor: pointer; }
+    .weekly-item input { width: 14px; height: 14px; }
+    .weekly-item .item-name { flex: 1; }
+    .weekly-item .item-cost { font-weight: 600; color: #374151; }
+    
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin: 16px 0 8px 0; padding-bottom: 4px; border-bottom: 2px solid #e5e7eb; }
+    .section-header h3 { font-size: 14px; font-weight: bold; color: #374151; }
+    .section-header .badge { font-size: 11px; background: #0d9488; color: white; padding: 2px 8px; border-radius: 10px; }
+    
+    .filters { display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 4px; }
+    .filter-btn { padding: 6px 12px; border-radius: 20px; border: 1px solid #e5e7eb; background: white; font-size: 12px; cursor: pointer; white-space: nowrap; }
+    .filter-btn.active { background: #0d9488; color: white; border-color: #0d9488; }
+    .leftover-badge { background: #ccfbf1; color: #0d9488; padding: 6px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+    
+    .meals-list { display: flex; flex-direction: column; gap: 8px; }
+    .meal-card { border-radius: 12px; padding: 10px; cursor: pointer; border: 2px solid #e5e7eb; background: white; transition: transform 0.1s; }
+    .meal-card:active { transform: scale(0.98); }
+    .meal-card.selected { border-color: var(--cat-color); background: var(--cat-bg); }
+    .meal-header { display: flex; justify-content: space-between; }
+    .meal-info { flex: 1; min-width: 0; }
+    .meal-title { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .meal-title .icon { font-size: 18px; }
+    .meal-title .name { font-weight: bold; font-size: 14px; }
+    .meal-title .check { font-size: 16px; }
+    .meal-title .day-badge { font-size: 10px; background: #0d9488; color: white; padding: 2px 6px; border-radius: 4px; }
+    .meal-hebrew { font-size: 12px; color: #6b7280; }
+    .meal-meta { display: flex; gap: 8px; font-size: 11px; color: #9ca3af; margin-top: 4px; flex-wrap: wrap; }
+    .meal-meta .leftover { color: #0d9488; font-weight: 600; }
+    .meal-price { font-weight: bold; font-size: 16px; color: #0d9488; }
+    .meal-keto { margin-top: 6px; padding: 6px; border-radius: 6px; font-size: 11px; }
+    .meal-keto.good { background: #dcfce7; color: #15803d; }
+    .meal-keto.bad { background: #fee2e2; color: #dc2626; }
+    .meal-ingredients-toggle { margin-top: 6px; font-size: 11px; color: #0d9488; cursor: pointer; }
+    .meal-ingredients { margin-top: 6px; padding: 8px; background: #f3f4f6; border-radius: 6px; font-size: 11px; }
+    
+    .day-selector { display: flex; align-items: center; gap: 4px; margin-top: 8px; padding: 8px; background: #f0fdf4; border-radius: 8px; flex-wrap: wrap; }
+    .day-label { font-size: 12px; font-weight: bold; color: #166534; }
+    .day-btn { padding: 5px 8px; border: 2px solid #d1d5db; border-radius: 6px; background: white; font-size: 10px; font-weight: bold; cursor: pointer; transition: all 0.15s; }
+    .day-btn:hover { border-color: #0d9488; background: #f0fdfa; }
+    .day-btn.active { border-color: #0d9488; background: #0d9488; color: white; }
+    .day-btn.clear { border-color: #fca5a5; background: #fef2f2; color: #dc2626; padding: 5px 6px; }
+    
+    .elia-section { background: #ecfdf5; border: 2px solid #10b981; border-radius: 12px; padding: 10px; margin-bottom: 12px; }
+    .elia-section h3 { font-size: 13px; font-weight: bold; color: #065f46; margin-bottom: 8px; }
+    .elia-proteins { display: flex; flex-direction: column; gap: 6px; }
+    .elia-protein { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px 12px; border-radius: 8px; border: 2px solid #d1fae5; }
+    .elia-protein.selected { border-color: #10b981; background: #ecfdf5; }
+    .elia-protein .name { font-size: 13px; font-weight: 500; }
+    .elia-protein .price { font-size: 13px; font-weight: bold; color: #059669; }
+    .elia-note { font-size: 10px; color: #065f46; margin-top: 8px; font-style: italic; }
+    
+    .tips { background: #eff6ff; border-radius: 12px; padding: 12px; margin-top: 12px; font-size: 12px; color: #374151; }
+    .footer { text-align: center; font-size: 11px; color: #9ca3af; padding: 16px 0; }
+    
+    .toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 10px 20px; border-radius: 8px; font-size: 13px; z-index: 1000; display: none; }
+    .toast.show { display: block; }
+    
+    .hidden { display: none !important; }
+    .collapsible { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+    .collapsible.open { max-height: 500px; }
+    .collapse-toggle { font-size: 10px; color: #6b7280; cursor: pointer; margin-top: 4px; }
   </style>
 </head>
-<body class="bg-gray-100">
-  <div id="root"></div>
+<body>
+  <div class="toast" id="toast"></div>
   
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  
-  <script type="text/babel">
-    const { useState, useMemo, useEffect } = React;
+  <div class="container">
+    <div class="header">
+      <h1>🍽️ Zafrany Family Meals</h1>
+      <p>Tap items to select • Saves automatically</p>
+    </div>
+    
+    <div class="budget-box" id="budgetBox">
+      <div class="budget-header">
+        <span style="font-weight:bold">Weekly Total:</span>
+        <span class="budget-total" id="budgetTotal">₪0</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="budget-breakdown">
+        <div class="budget-row"><span>🍳 Breakfast:</span><span id="breakfastCost">₪0</span></div>
+        <div class="budget-row"><span>🎒 School Lunch:</span><span id="schoolCost">₪0</span></div>
+        <div class="budget-row"><span>🧂 Pantry:</span><span id="pantryCost">₪0</span></div>
+        <div class="budget-row"><span>✨ Shabbos:</span><span id="shabbosCost">₪0</span></div>
+        <div class="budget-row"><span>🍽️ Dinners (<span id="dinnerCount">0</span>):</span><span id="dinnersCost">₪0</span></div>
+        <div class="budget-row"><span>🥑 Elia (<span id="eliaCount">0</span>):</span><span id="eliaCost">₪0</span></div>
+        <div class="budget-row total"><span>🥡 Leftover lunches:</span><span id="leftoverCount">0</span></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="exportBtn">📤 Export</button>
+        <button class="btn btn-secondary" id="clearBtn">🗑️</button>
+      </div>
+    </div>
+    
+    <div class="export-panel hidden" id="exportPanel">
+      <h3>📤 Export & Share</h3>
+      <div class="export-days" id="exportDays"></div>
+      <div class="export-btns">
+        <button class="export-btn blue" id="copyPlanBtn">📋 Copy Plan</button>
+        <button class="export-btn orange" id="copyListBtn">🛒 Copy List</button>
+        <button class="export-btn green" id="downloadCSVBtn">📊 CSV File</button>
+        <button class="export-btn purple" id="printBtn">📄 View/Print</button>
+        <button class="export-btn" id="shareBtn" style="background:#fef3c7;color:#92400e;grid-column:span 2;">📤 Share (WhatsApp/Notes)</button>
+      </div>
+    </div>
+    
+    <!-- Breakfast Section -->
+    <div class="weekly-section breakfast">
+      <div class="section-header-row">
+        <h3>🍳 Breakfast (7 days)</h3>
+        <span class="cost" id="breakfastTotal">₪0</span>
+      </div>
+      <div class="weekly-items" id="breakfastItems"></div>
+    </div>
+    
+    <!-- School Lunch Section -->
+    <div class="weekly-section school">
+      <div class="section-header-row">
+        <h3>🎒 School Lunch (Yakira & Yedidya)</h3>
+        <span class="cost" id="schoolTotal">₪0</span>
+      </div>
+      <div class="weekly-items" id="schoolItems"></div>
+    </div>
+    
+    <!-- Pantry Section -->
+    <div class="weekly-section pantry">
+      <div class="section-header-row">
+        <h3>🧂 Pantry Basics</h3>
+        <span class="cost" id="pantryTotal">₪0</span>
+      </div>
+      <div class="weekly-items" id="pantryItems"></div>
+    </div>
+    
+    <!-- Shabbos Section -->
+    <div class="weekly-section shabbos">
+      <div class="section-header-row">
+        <h3>✨ Shabbos</h3>
+        <span class="cost" id="shabbosTotal">₪0</span>
+      </div>
+      <div class="weekly-items" id="shabbosItems"></div>
+    </div>
+    
+    <!-- Elia's Proteins Section -->
+    <div class="elia-section">
+      <h3>🥑 Elia's Keto Add-ons</h3>
+      <div class="elia-proteins" id="eliaProteins"></div>
+      <div class="elia-note">Use +/− to set quantities for dairy/non-keto nights</div>
+    </div>
+    
+    <div class="section-header">
+      <h3>🍽️ Family Dinners</h3>
+      <span class="badge" id="dinnerBadge">0 selected</span>
+    </div>
+    
+    <div class="filters" id="filters"></div>
+    
+    <div class="meals-list" id="mealsList"></div>
+    
+    <div class="tips">
+      💡 <strong>Tips:</strong> Tap meals to select, then assign days (Sun-Thu). Add Elia meals for dairy nights. Aim for 🥡5+ leftover lunches. Uncheck items you already have!
+    </div>
+    
+    <div class="footer">📱 Add to Home Screen for app-like experience</div>
+  </div>
 
-    const meals = [
+  <script>
+    // Breakfast items
+    var breakfastItems = [
+      { id: "b1", name: "Muller Yogurt x2 packs", cost: 50, ingredients: ["Muller yogurt 8-pack x2 (14 cups for 2/day)"] },
+      { id: "b2", name: "Bread/Rolls", cost: 25, ingredients: ["Bread loaf or rolls pack"] },
+      { id: "b3", name: "Fruit (apples, bananas)", cost: 20, ingredients: ["Apples 1kg", "Bananas 1kg"] },
+      { id: "b4", name: "Sliced Cheese", cost: 18, ingredients: ["Sliced cheese pack"] },
+      { id: "b5", name: "Spread (chocolate/jam)", cost: 10, ingredients: ["Chocolate spread or jam"] },
+      { id: "b6", name: "Cereal", cost: 18, ingredients: ["Cereal box"] }
+    ];
+
+    // School lunch items
+    var schoolItems = [
+      { id: "s1", name: "Pitas (2 packs)", cost: 14, ingredients: ["Pita bread x2 packs"] },
+      { id: "s2", name: "OR Sandwich Bread", cost: 12, ingredients: ["Sliced bread loaf"] },
+      { id: "s3", name: "Deli Turkey (sliced)", cost: 30, ingredients: ["Sliced deli turkey 400g"] },
+      { id: "s4", name: "Sliced Cheese", cost: 18, ingredients: ["Sliced cheese pack"] },
+      { id: "s5", name: "Apples for snack", cost: 15, ingredients: ["Apples 1.5kg"] },
+      { id: "s6", name: "Snack bags (Bamba, etc)", cost: 20, ingredients: ["Bamba/Bissli snack packs"] }
+    ];
+
+    // Pantry items
+    var pantryItems = [
+      { id: "p1", name: "Olive/Avocado Oil", cost: 25, ingredients: ["Olive oil or Avocado oil 750ml"] },
+      { id: "p2", name: "Spices (salt, pepper, etc)", cost: 10, ingredients: ["Basic spices as needed"] },
+      { id: "p3", name: "Condiments (ketchup, mayo)", cost: 15, ingredients: ["Ketchup", "Mayonnaise"] },
+      { id: "p4", name: "Rice/Pasta stock", cost: 12, ingredients: ["Rice 1kg or Pasta 500g"] },
+      { id: "p5", name: "Canned tomatoes", cost: 8, ingredients: ["Canned crushed tomatoes x2"] },
+      { id: "p6", name: "Disposable plates", cost: 20, ingredients: ["Disposable plates pack"] },
+      { id: "p7", name: "Disposable silverware", cost: 15, ingredients: ["Disposable forks, knives, spoons"] }
+    ];
+
+    // Shabbos meals with detailed pricing breakdown
+    var shabbosItems = [
+      // Friday Night
+      { id: "sh1", name: "Challah (homemade)", cost: 15, ingredients: ["Flour 1kg (8)", "Eggs x3 (4)", "Sugar, oil, yeast (3)"], category: "Friday Night" },
+      { id: "sh2", name: "Salmon fillet", cost: 39, ingredients: ["Salmon fillet 500g (39)"], category: "Friday Night" },
+      { id: "sh3", name: "Chicken quarters", cost: 36, ingredients: ["Chicken quarters 1.5kg (36)"], category: "Friday Night" },
+      { id: "sh4", name: "Rice", cost: 8, ingredients: ["Rice 1kg (8)"], category: "Friday Night" },
+      { id: "sh5", name: "Salad veggies", cost: 15, ingredients: ["Cucumbers (4)", "Tomatoes (5)", "Lettuce (3)", "Peppers (3)"], category: "Friday Night" },
+      { id: "sh6", name: "Dessert", cost: 20, ingredients: ["Dessert ingredients or store-bought (20)"], category: "Friday Night" },
+      // Shabbos Lunch
+      { id: "sh7", name: "Cholent meat", cost: 30, ingredients: ["Beef chunks/bones 500g (30)"], category: "Shabbos Lunch" },
+      { id: "sh8", name: "Cholent starches", cost: 15, ingredients: ["Potatoes (6)", "Beans (5)", "Barley (4)"], category: "Shabbos Lunch" },
+      { id: "sh9", name: "Kugel ingredients", cost: 12, ingredients: ["Potatoes or noodles (6)", "Eggs x3 (4)", "Oil (2)"], category: "Shabbos Lunch" },
+      { id: "sh10", name: "Elia keto cholent extra", cost: 15, ingredients: ["Extra meat (10)", "Cauliflower (5)"], category: "Shabbos Lunch" },
+      // Seudah Shlishit
+      { id: "sh11", name: "Bread/Challah leftover", cost: 8, ingredients: ["Bread or use leftover challah (8)"], category: "Seudah Shlishit" },
+      { id: "sh12", name: "Hummus", cost: 7, ingredients: ["Hummus container (7)"], category: "Seudah Shlishit" },
+      { id: "sh13", name: "Tehina", cost: 5, ingredients: ["Tehina (5)"], category: "Seudah Shlishit" },
+      { id: "sh14", name: "Salads/dips", cost: 10, ingredients: ["Prepared salads (10)"], category: "Seudah Shlishit" },
+      { id: "sh15", name: "Olives", cost: 8, ingredients: ["Olives container (8)"], category: "Seudah Shlishit" },
+      // Wine
+      { id: "sh16", name: "Wine (every 2 weeks)", cost: 50, ingredients: ["Bottle of wine 50-150 (avg ₪50/week)"], category: "Wine" }
+    ];
+
+    // Elia's individual protein meals
+    var eliaProteins = [
+      { id: "e1", name: "Grilled Chicken Breast + Salad", cost: 22, ingredients: ["Chicken breast 400g (18)", "Salad veggies (4)"] },
+      { id: "e2", name: "Salmon Fillet + Roasted Veggies", cost: 28, ingredients: ["Salmon 200g (20)", "Zucchini, peppers (8)"] },
+      { id: "e3", name: "Beef Patties + Cauliflower", cost: 20, ingredients: ["Ground beef 300g (16)", "Cauliflower (4)"] },
+      { id: "e4", name: "Chicken Thighs + Zucchini", cost: 18, ingredients: ["Chicken thighs 500g (14)", "Zucchini (4)"] },
+      { id: "e5", name: "Steak + Green Beans", cost: 32, ingredients: ["Beef steak 300g (28)", "Green beans (4)"] },
+      { id: "e6", name: "Rotisserie Chicken (store)", cost: 35, ingredients: ["Ready rotisserie chicken (35)"] },
+      { id: "e7", name: "Ground Beef Stir-Fry", cost: 24, ingredients: ["Ground beef 400g (20)", "Cabbage & onions (4)"] }
+    ];
+
+    // Family dinners
+    var meals = [
       { id: 1, name: "Air Fryer Schnitzel + Rice", nameHe: "שניצל + אורז", category: "chicken", cost: 45, servings: 6, leftoverLunches: 2, ketoOption: "Schnitzel no breading + cauliflower", prepTime: "15 min", ingredients: ["Frozen schnitzel 700g (17.90)", "Rice 500g (8)", "Frozen veggies (11.60)", "Oil (7.50)"] },
       { id: 2, name: "Chicken Vegetable Soup", nameHe: "מרק עוף", category: "chicken", cost: 42, servings: 8, leftoverLunches: 3, ketoOption: "Skip potatoes, extra chicken", prepTime: "25 min", ingredients: ["Whole chicken (24)", "Carrots (3)", "Potatoes (4)", "Celery (6)", "Onion (2)", "Spices (3)"], freezable: true },
-      { id: 3, name: "Roasted Chicken Legs + Potatoes", nameHe: "שוקיים + תפו״א", category: "chicken", cost: 48, servings: 6, leftoverLunches: 2, ketoOption: "Legs + roasted zucchini", prepTime: "45 min", ingredients: ["Chicken legs 1kg (29)", "Potatoes 1kg (6)", "Onions (2)", "Oil & spices (11)"] },
+      { id: 3, name: "Roasted Chicken Legs", nameHe: "שוקיים + תפו״א", category: "chicken", cost: 48, servings: 6, leftoverLunches: 2, ketoOption: "Legs + roasted zucchini", prepTime: "45 min", ingredients: ["Chicken legs 1kg (29)", "Potatoes 1kg (6)", "Onions (2)", "Oil & spices (11)"] },
       { id: 4, name: "Chicken Stir-Fry + Rice", nameHe: "מוקפץ עוף", category: "chicken", cost: 52, servings: 6, leftoverLunches: 2, ketoOption: "Over cauliflower rice", prepTime: "20 min", ingredients: ["Chicken breast 1kg (41)", "Mixed veggies (11.60)", "Rice (8)", "Soy sauce (10)", "Garlic (2)"] },
       { id: 5, name: "Chicken Wings + Fries", nameHe: "כנפיים + צ׳יפס", category: "chicken", cost: 38, servings: 5, leftoverLunches: 1, ketoOption: "Wings only + salad", prepTime: "30 min", ingredients: ["Chicken wings 1kg (12)", "Frozen fries (16.20)", "Ketchup (10)"] },
       { id: 6, name: "Meatballs + Mashed Potatoes", nameHe: "קציצות + פירה", category: "meat", cost: 55, servings: 6, leftoverLunches: 2, ketoOption: "No bread + cauliflower mash", prepTime: "35 min", ingredients: ["Ground beef 500g (27)", "Breadcrumbs (6)", "Potatoes (6)", "Onion (2)", "Spices (5)", "Oil (9)"], freezable: true },
@@ -38,368 +311,1221 @@
       { id: 9, name: "Hamburgers + Fries", nameHe: "המבורגר + צ׳יפס", category: "meat", cost: 58, servings: 5, leftoverLunches: 0, ketoOption: "Lettuce wrap burger", prepTime: "20 min", ingredients: ["Ground beef 500g (27)", "Burger buns (12)", "Frozen fries (16.20)", "Toppings (8)", "Condiments (5)"] },
       { id: 10, name: "Stuffed Peppers", nameHe: "פלפל ממולא", category: "meat", cost: 50, servings: 6, leftoverLunches: 2, ketoOption: "No rice, extra meat", prepTime: "45 min", ingredients: ["Ground beef 500g (27)", "Bell peppers (10)", "Rice (8)", "Tomato sauce (5.50)", "Spices (5)"] },
       { id: 11, name: "Baked Salmon + Rice", nameHe: "סלמון + אורז", category: "fish", cost: 65, servings: 6, leftoverLunches: 2, ketoOption: "Salmon + roasted veggies", prepTime: "25 min", ingredients: ["Salmon fillet (39)", "Rice (8)", "Lemon (3)", "Olive oil (10)", "Herbs (5)"] },
-      { id: 12, name: "Fish Schnitzel + Salad", nameHe: "שניצל דג + סלט", category: "fish", cost: 42, servings: 5, leftoverLunches: 1, ketoOption: "Grilled fish no breading", prepTime: "20 min", ingredients: ["Fish schnitzel 700g (25.20)", "Salad veggies (12)", "Dressing (5)"] },
-      { id: 13, name: "Fish Patties in Sauce", nameHe: "קציצות דג ברוטב", category: "fish", cost: 45, servings: 6, leftoverLunches: 2, ketoOption: "Fish patties work!", prepTime: "30 min", ingredients: ["Fish patties 700g (26.40)", "Tomato sauce (5.50)", "Rice (8)", "Spices (5)"] },
+      { id: 12, name: "Fish Schnitzel + Salad", nameHe: "שניצל דג", category: "fish", cost: 42, servings: 5, leftoverLunches: 1, ketoOption: "Grilled fish no breading", prepTime: "20 min", ingredients: ["Fish schnitzel 700g (25.20)", "Salad veggies (12)", "Dressing (5)"] },
+      { id: 13, name: "Fish Patties in Sauce", nameHe: "קציצות דג", category: "fish", cost: 45, servings: 6, leftoverLunches: 2, ketoOption: "Fish patties work!", prepTime: "30 min", ingredients: ["Fish patties 700g (26.40)", "Tomato sauce (5.50)", "Rice (8)", "Spices (5)"] },
       { id: 14, name: "Cheese Pasta", nameHe: "פסטה גבינה", category: "dairy", cost: 32, servings: 5, leftoverLunches: 2, ketoOption: "N/A - dairy", prepTime: "15 min", ingredients: ["Pasta 500g (10.20)", "Yellow cheese (12)", "Butter (5)", "Cream (5)"] },
-      { id: 15, name: "Pizza Night", nameHe: "פיצה ביתית", category: "dairy", cost: 45, servings: 6, leftoverLunches: 2, ketoOption: "Cauliflower crust separate", prepTime: "30 min", ingredients: ["Frozen dough (15.30)", "Tomato sauce (5.50)", "Cheese 400g (24)", "Toppings (8)"] },
+      { id: 15, name: "Pizza Night", nameHe: "פיצה ביתית", category: "dairy", cost: 45, servings: 6, leftoverLunches: 2, ketoOption: "N/A - dairy", prepTime: "30 min", ingredients: ["Frozen dough (15.30)", "Tomato sauce (5.50)", "Cheese 400g (24)", "Toppings (8)"] },
       { id: 16, name: "Cheese Burekas + Salad", nameHe: "בורקס גבינה", category: "dairy", cost: 35, servings: 5, leftoverLunches: 1, ketoOption: "N/A - dairy", prepTime: "20 min", ingredients: ["Cheese burekas (14.10)", "Salad veggies (12)", "Yogurt (7.80)"] },
       { id: 17, name: "Pasta Cream Sauce", nameHe: "פסטה שמנת", category: "dairy", cost: 38, servings: 5, leftoverLunches: 2, ketoOption: "N/A - dairy", prepTime: "20 min", ingredients: ["Pasta 500g (10.20)", "Cream (12)", "Mushrooms (12)", "Cheese (8)", "Garlic (3)"] },
-      { id: 18, name: "Shakshuka + Bread", nameHe: "שקשוקה + לחם", category: "quick", cost: 28, servings: 4, leftoverLunches: 0, ketoOption: "N/A - eggs & tomato", prepTime: "15 min", ingredients: ["Eggs x12 (12)", "Tomato sauce (5.50)", "Bread (8.30)", "Spices (3)"] },
+      { id: 18, name: "Shakshuka + Bread", nameHe: "שקשוקה", category: "quick", cost: 28, servings: 4, leftoverLunches: 0, ketoOption: "N/A - eggs & tomato", prepTime: "15 min", ingredients: ["Eggs x12 (12)", "Tomato sauce (5.50)", "Bread (8.30)", "Spices (3)"] },
       { id: 19, name: "Falafel + Pita", nameHe: "פלאפל בפיתה", category: "quick", cost: 35, servings: 5, leftoverLunches: 1, ketoOption: "Falafel + salad only", prepTime: "15 min", ingredients: ["Frozen falafel (11.90)", "Pitas (7)", "Hummus (7)", "Salads (10)"] },
       { id: 20, name: "Tortilla Wraps", nameHe: "טורטיות", category: "quick", cost: 40, servings: 5, leftoverLunches: 0, ketoOption: "Lettuce wraps", prepTime: "10 min", ingredients: ["Tortillas (5.80)", "Deli turkey (15)", "Cheese (12)", "Veggies (8)"] },
-      { id: 21, name: "Soup & Sandwich", nameHe: "מרק וסנדוויץ׳", category: "quick", cost: 32, servings: 5, leftoverLunches: 1, ketoOption: "Soup + protein only", prepTime: "10 min", ingredients: ["Canned soup (12)", "Bread (8.30)", "Deli turkey (15)", "Cheese (8)"] },
+      { id: 21, name: "Soup & Sandwich", nameHe: "מרק וסנדוויץ׳", category: "quick", cost: 32, servings: 5, leftoverLunches: 1, ketoOption: "Soup + protein only", prepTime: "10 min", ingredients: ["Canned soup (12)", "Bread (8.30)", "Deli turkey (15)", "Cheese (8)"] }
     ];
 
-    const shabbosMeals = {
-      fridayNight: { name: "Friday Night", cost: 85, includes: ["Challah", "Salmon", "Chicken", "Rice", "Salads"], ketoOption: "Salmon + chicken + salads" },
-      shabbosLunch: { name: "Shabbos Lunch", cost: 55, includes: ["Challah", "Cholent", "Kugel", "Salads"], ketoOption: "Keto cholent" },
-      seudahShlishit: { name: "Seudah Shlishit", cost: 25, includes: ["Bread", "Salads", "Dips"], ketoOption: "Salads + olives" }
+    var categories = {
+      chicken: { icon: "🍗", bg: "#FFF3E0", border: "#FF9800" },
+      meat: { icon: "🥩", bg: "#FFEBEE", border: "#F44336" },
+      fish: { icon: "🐟", bg: "#E3F2FD", border: "#2196F3" },
+      dairy: { icon: "🧀", bg: "#F3E5F5", border: "#9C27B0" },
+      quick: { icon: "⚡", bg: "#E8F5E9", border: "#4CAF50" }
     };
 
-    const fixedCosts = {
-      breakfast: { name: "Breakfast (7d)", cost: 105, details: "Yogurt, bread, fruit" },
-      schoolLunch: { name: "School Lunch", cost: 75, details: "Pita, turkey, fruit" },
-      formula: { name: "Formula", cost: 120, details: "Shiloh" },
-      pantry: { name: "Pantry", cost: 35, details: "Oil, spices" },
-      eliaKeto: { name: "Elia Keto", cost: 45, details: "Avocado, olives, coconut" }
+    var days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    var STORAGE_KEY = "zafranyMealPlanV5";
+
+    var state = {
+      breakfast: ["b1", "b2", "b3", "b4", "b5"],
+      school: ["s1", "s3", "s4", "s5", "s6"],
+      pantry: ["p1", "p2", "p3", "p6", "p7"],
+      shabbos: ["sh1", "sh2", "sh3", "sh4", "sh5", "sh6", "sh7", "sh8", "sh9", "sh10", "sh11", "sh12", "sh13", "sh14", "sh15", "sh16"],
+      dinners: [],
+      eliaQty: {},  // { "e1": 2, "e3": 1 } - stores quantities
+      assignedDays: {},
+      filter: "all",
+      showExport: false,
+      expandedIngredients: null
     };
 
-    const categoryColors = {
-      chicken: { bg: "#FFF3E0", border: "#FF9800", icon: "🍗" },
-      meat: { bg: "#FFEBEE", border: "#F44336", icon: "🥩" },
-      fish: { bg: "#E3F2FD", border: "#2196F3", icon: "🐟" },
-      dairy: { bg: "#F3E5F5", border: "#9C27B0", icon: "🧀" },
-      quick: { bg: "#E8F5E9", border: "#4CAF50", icon: "⚡" },
-    };
-
-    const days = ["Sun", "Mon", "Tue", "Wed", "Thu"];
-    const STORAGE_KEY = "kolMealPlan";
-
-    function MealPlanner() {
-      const [selectedMeals, setSelectedMeals] = useState(new Set());
-      const [showIngredients, setShowIngredients] = useState(null);
-      const [filter, setFilter] = useState("all");
-      const [showExport, setShowExport] = useState(false);
-      const [assignedDays, setAssignedDays] = useState({});
-      const [includeShabbos, setIncludeShabbos] = useState({ fridayNight: true, shabbosLunch: true, seudahShlishit: true });
-      const [toast, setToast] = useState(null);
-
-      // Load from localStorage
-      useEffect(() => {
-        try {
-          const saved = localStorage.getItem(STORAGE_KEY);
-          if (saved) {
-            const data = JSON.parse(saved);
-            if (data.selectedMeals) setSelectedMeals(new Set(data.selectedMeals));
-            if (data.assignedDays) setAssignedDays(data.assignedDays);
-            if (data.includeShabbos) setIncludeShabbos(data.includeShabbos);
-          }
-        } catch (e) { console.log('No saved data'); }
-      }, []);
-
-      // Save to localStorage
-      useEffect(() => {
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify({
-            selectedMeals: Array.from(selectedMeals),
-            assignedDays,
-            includeShabbos
-          }));
-        } catch (e) { console.log('Save failed'); }
-      }, [selectedMeals, assignedDays, includeShabbos]);
-
-      const shabbosTotal = Object.entries(shabbosMeals).reduce((sum, [k, m]) => includeShabbos[k] ? sum + m.cost : sum, 0);
-      const mealsTotal = Array.from(selectedMeals).reduce((sum, id) => sum + (meals.find(m => m.id === id)?.cost || 0), 0);
-      const fixedTotal = Object.values(fixedCosts).reduce((sum, c) => sum + c.cost, 0);
-      const weeklyTotal = shabbosTotal + mealsTotal + fixedTotal;
-      const totalLeftovers = Array.from(selectedMeals).reduce((sum, id) => sum + (meals.find(m => m.id === id)?.leftoverLunches || 0), 0);
-      
-      const budgetMin = 650, budgetMax = 800;
-      const isInBudget = weeklyTotal >= budgetMin && weeklyTotal <= budgetMax;
-      const isOverBudget = weeklyTotal > budgetMax;
-
-      const toggleMeal = (id) => {
-        setSelectedMeals(prev => {
-          const next = new Set(prev);
-          next.has(id) ? next.delete(id) : next.add(id);
-          return next;
-        });
-      };
-
-      const selectedMealsList = useMemo(() => Array.from(selectedMeals).map(id => meals.find(m => m.id === id)).filter(Boolean), [selectedMeals]);
-      const mealCounts = useMemo(() => {
-        const c = {}; selectedMealsList.forEach(m => c[m.category] = (c[m.category] || 0) + 1); return c;
-      }, [selectedMealsList]);
-
-      const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2000); };
-
-      const generateText = (type) => {
-        const date = new Date().toLocaleDateString();
-        if (type === 'plan') {
-          let t = `🍽️ KOL FAMILY MEAL PLAN\n${date}\n${'═'.repeat(35)}\n\n`;
-          t += `💰 TOTAL: ₪${weeklyTotal}\n`;
-          t += `Breakfast: ₪${fixedCosts.breakfast.cost} | Shabbos: ₪${shabbosTotal} | Dinners: ₪${mealsTotal}\n`;
-          t += `School: ₪${fixedCosts.schoolLunch.cost} | Fixed: ₪${fixedCosts.formula.cost + fixedCosts.pantry.cost + fixedCosts.eliaKeto.cost}\n\n`;
-          t += `📅 DINNERS\n${'─'.repeat(25)}\n`;
-          selectedMealsList.forEach(m => {
-            const d = assignedDays[m.id];
-            t += `${d ? d+': ' : '• '}${m.name} (₪${m.cost}) 🥡${m.leftoverLunches}\n`;
-            if (!m.ketoOption.includes("N/A")) t += `  Elia: ${m.ketoOption}\n`;
-          });
-          t += `\n✨ SHABBOS\n`;
-          Object.entries(shabbosMeals).forEach(([k,m]) => { if(includeShabbos[k]) t += `${m.name}: ₪${m.cost}\n`; });
-          t += `\n🥡 Leftover lunches: ${totalLeftovers}\n`;
-          return t;
-        } else {
-          let t = `🛒 SHOPPING LIST\n${date}\n${'═'.repeat(35)}\n\n`;
-          t += `📌 WEEKLY BASICS\n`;
-          Object.values(fixedCosts).forEach(c => t += `☐ ${c.name}: ${c.details}\n`);
-          t += `\n✨ SHABBOS\n`;
-          Object.entries(shabbosMeals).forEach(([k,m]) => { if(includeShabbos[k]) t += `☐ ${m.name}: ${m.includes.join(', ')}\n`; });
-          t += `\n🍽️ DINNERS\n`;
-          selectedMealsList.forEach(m => { t += `\n${m.name}:\n`; m.ingredients.forEach(i => t += `☐ ${i}\n`); });
-          t += `\n${'═'.repeat(35)}\nTOTAL: ₪${weeklyTotal}`;
-          return t;
+    function loadState() {
+      try {
+        var saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          var data = JSON.parse(saved);
+          state.breakfast = data.breakfast || ["b1", "b2", "b3", "b4", "b5"];
+          state.school = data.school || ["s1", "s3", "s4", "s5", "s6"];
+          state.pantry = data.pantry || ["p1", "p2", "p3", "p6", "p7"];
+          state.shabbos = data.shabbos || ["sh1", "sh2", "sh3", "sh4", "sh5", "sh6", "sh7", "sh8", "sh9", "sh10", "sh11", "sh12", "sh13", "sh14", "sh15", "sh16"];
+          state.dinners = data.dinners || [];
+          state.eliaQty = data.eliaQty || {};
+          state.assignedDays = data.assignedDays || {};
         }
-      };
-
-      const copyText = async (text) => {
-        try {
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            await navigator.clipboard.writeText(text);
-            showToast('✅ Copied!');
-          } else {
-            const ta = document.createElement('textarea');
-            ta.value = text; ta.style.cssText = 'position:fixed;opacity:0';
-            document.body.appendChild(ta); ta.select();
-            document.execCommand('copy');
-            document.body.removeChild(ta);
-            showToast('✅ Copied!');
-          }
-        } catch (e) {
-          showToast('❌ Copy failed');
-        }
-      };
-
-      const download = (type) => {
-        if (type === 'csv') {
-          let csv = "Type,Item,Day,Cost,Notes\n";
-          Object.entries(fixedCosts).forEach(([k,c]) => csv += `Fixed,${c.name},,${c.cost},"${c.details}"\n`);
-          Object.entries(shabbosMeals).forEach(([k,m]) => { if(includeShabbos[k]) csv += `Shabbos,${m.name},,${m.cost},"${m.includes.join(', ')}"\n`; });
-          selectedMealsList.forEach(m => csv += `Dinner,${m.name},${assignedDays[m.id]||''},${m.cost},"Leftovers: ${m.leftoverLunches}"\n`);
-          csv += `\nTOTAL,,,${weeklyTotal},`;
-          const blob = new Blob([csv], {type:'text/csv'});
-          const a = document.createElement('a'); 
-          a.href = URL.createObjectURL(blob); 
-          a.download = `meal-plan-${new Date().toISOString().split('T')[0]}.csv`; 
-          a.click();
-          showToast('✅ CSV downloaded!');
-        } else {
-          const content = generateText('plan') + '\n\n' + generateText('list');
-          const w = window.open('','_blank');
-          w.document.write(`<html><head><title>Meal Plan</title><style>body{font-family:monospace;white-space:pre-wrap;padding:20px;font-size:12px;}</style></head><body>${content}</body></html>`);
-          w.document.close(); 
-          w.print();
-        }
-      };
-
-      const clearAll = () => {
-        if (confirm('Clear all selections?')) {
-          setSelectedMeals(new Set());
-          setAssignedDays({});
-          showToast('🗑️ Cleared!');
-        }
-      };
-
-      const filteredMeals = filter === "all" ? meals : meals.filter(m => m.category === filter);
-
-      return (
-        <div className="p-3 bg-gray-100 min-h-screen max-w-lg mx-auto">
-          {/* Toast */}
-          {toast && (
-            <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm">
-              {toast}
-            </div>
-          )}
-
-          {/* Header */}
-          <div className="text-center mb-3">
-            <h1 className="text-xl font-bold text-teal-800">🍽️ Kol Family Meals</h1>
-            <p className="text-gray-500 text-xs">Tap meals to select • Data saves automatically</p>
-          </div>
-
-          {/* Budget */}
-          <div className={`rounded-xl p-3 mb-3 border-2 ${isInBudget ? 'bg-green-100 border-green-500' : isOverBudget ? 'bg-red-100 border-red-500' : 'bg-yellow-100 border-yellow-500'}`}>
-            <div className="flex justify-between items-center mb-1">
-              <span className="font-bold">Weekly Total:</span>
-              <span className={`font-bold text-2xl ${isInBudget ? 'text-green-700' : isOverBudget ? 'text-red-700' : 'text-yellow-700'}`}>₪{weeklyTotal}</span>
-            </div>
-            <div className="bg-gray-300 rounded-full h-3 overflow-hidden mb-2">
-              <div className={`h-full transition-all duration-300 ${isInBudget ? 'bg-green-500' : isOverBudget ? 'bg-red-500' : 'bg-yellow-500'}`} style={{ width: `${Math.min((weeklyTotal / budgetMax) * 100, 100)}%` }} />
-            </div>
-            <div className="text-xs bg-white/50 rounded p-2 space-y-0.5">
-              <div className="flex justify-between"><span>🍳 Breakfast:</span><span>₪{fixedCosts.breakfast.cost}</span></div>
-              <div className="flex justify-between"><span>✨ Shabbos:</span><span>₪{shabbosTotal}</span></div>
-              <div className="flex justify-between"><span>🍽️ Dinners ({selectedMeals.size}):</span><span>₪{mealsTotal}</span></div>
-              <div className="flex justify-between"><span>🎒 School + Fixed:</span><span>₪{fixedCosts.schoolLunch.cost + fixedCosts.formula.cost + fixedCosts.pantry.cost + fixedCosts.eliaKeto.cost}</span></div>
-              <div className="flex justify-between font-bold border-t pt-1 text-teal-700"><span>🥡 Leftover lunches:</span><span>{totalLeftovers}</span></div>
-            </div>
-            <div className="flex gap-2 mt-2">
-              {selectedMeals.size > 0 && (
-                <>
-                  <button onClick={() => setShowExport(!showExport)} className="flex-1 py-2 bg-teal-600 text-white rounded-lg font-bold text-sm">
-                    {showExport ? "✕ Close" : "📤 Export"}
-                  </button>
-                  <button onClick={clearAll} className="px-3 py-2 bg-gray-300 text-gray-700 rounded-lg text-sm">🗑️</button>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Export Panel */}
-          {showExport && (
-            <div className="bg-white rounded-xl p-3 mb-3 border-2 border-teal-500 shadow-lg">
-              <h3 className="font-bold text-teal-700 text-sm mb-2">📤 Export Your Plan</h3>
-              <div className="space-y-1 max-h-32 overflow-y-auto no-scrollbar mb-3">
-                {selectedMealsList.map(m => (
-                  <div key={m.id} className="flex items-center gap-1 text-xs bg-gray-50 p-1.5 rounded">
-                    <span className="flex-1 truncate">{categoryColors[m.category].icon} {m.name}</span>
-                    <select 
-                      value={assignedDays[m.id] || ""} 
-                      onChange={e => setAssignedDays(p => ({...p, [m.id]: e.target.value}))} 
-                      className="text-xs border rounded p-1 bg-white"
-                    >
-                      <option value="">Day</option>
-                      {days.map(d => <option key={d} value={d}>{d}</option>)}
-                    </select>
-                  </div>
-                ))}
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <button onClick={() => copyText(generateText('plan'))} className="py-2 rounded-lg font-semibold text-sm bg-blue-100 text-blue-700 active:bg-blue-200">📋 Copy Plan</button>
-                <button onClick={() => copyText(generateText('list'))} className="py-2 rounded-lg font-semibold text-sm bg-orange-100 text-orange-700 active:bg-orange-200">🛒 Copy List</button>
-                <button onClick={() => download('csv')} className="py-2 rounded-lg font-semibold text-sm bg-green-100 text-green-700 active:bg-green-200">📊 CSV File</button>
-                <button onClick={() => download('pdf')} className="py-2 rounded-lg font-semibold text-sm bg-purple-100 text-purple-700 active:bg-purple-200">📄 Print/PDF</button>
-              </div>
-            </div>
-          )}
-
-          {/* Shabbos */}
-          <div className="bg-yellow-50 rounded-xl p-2 mb-3 border border-yellow-300">
-            <div className="flex justify-between items-center mb-1">
-              <h3 className="font-bold text-sm">✨ Shabbos</h3>
-              <span className="font-bold text-sm">₪{shabbosTotal}</span>
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              {Object.entries(shabbosMeals).map(([k, m]) => (
-                <label key={k} className="flex items-center gap-1 text-xs cursor-pointer bg-white px-2 py-1 rounded-full border">
-                  <input 
-                    type="checkbox" 
-                    checked={includeShabbos[k]} 
-                    onChange={() => setIncludeShabbos(p => ({...p, [k]: !p[k]}))} 
-                    className="w-3 h-3"
-                  />
-                  <span>{m.name}</span>
-                  <span className="text-gray-500">₪{m.cost}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Category filters */}
-          <div className="flex gap-1 mb-3 overflow-x-auto no-scrollbar">
-            <button onClick={() => setFilter("all")} className={`px-3 py-1.5 rounded-full text-xs whitespace-nowrap ${filter === "all" ? 'bg-teal-700 text-white' : 'bg-white border'}`}>All</button>
-            {Object.entries(categoryColors).map(([k, c]) => (
-              <button 
-                key={k} 
-                onClick={() => setFilter(k)} 
-                className={`px-2 py-1.5 rounded-full text-xs whitespace-nowrap flex items-center gap-1 ${filter === k ? 'text-white' : 'bg-white border'}`} 
-                style={filter === k ? {backgroundColor: c.border} : {}}
-              >
-                {c.icon} <span className="font-bold">{mealCounts[k] || 0}</span>
-              </button>
-            ))}
-            <div className="px-2 py-1.5 rounded-full text-xs bg-teal-100 text-teal-700 font-bold whitespace-nowrap">🥡 {totalLeftovers}</div>
-          </div>
-
-          {/* Meal Cards */}
-          <div className="space-y-2">
-            {filteredMeals.map(m => {
-              const sel = selectedMeals.has(m.id);
-              const c = categoryColors[m.category];
-              const day = assignedDays[m.id];
-              return (
-                <div 
-                  key={m.id} 
-                  onClick={() => toggleMeal(m.id)} 
-                  className="rounded-xl p-2.5 cursor-pointer active:scale-[0.98] transition-transform"
-                  style={{backgroundColor: sel ? c.bg : 'white', border: `2px solid ${sel ? c.border : '#e5e7eb'}`}}
-                >
-                  <div className="flex justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-lg">{c.icon}</span>
-                        <span className="font-bold text-sm">{m.name}</span>
-                        {sel && <span style={{color: c.border}} className="text-lg">✓</span>}
-                        {day && <span className="text-xs bg-teal-600 text-white px-1.5 py-0.5 rounded">{day}</span>}
-                      </div>
-                      <div className="text-xs text-gray-500">{m.nameHe}</div>
-                      <div className="flex gap-2 text-xs text-gray-400 mt-0.5 flex-wrap">
-                        <span>⏱️ {m.prepTime}</span>
-                        <span>👥 {m.servings}</span>
-                        <span className="text-teal-600 font-semibold">🥡 {m.leftoverLunches}</span>
-                        {m.freezable && <span>❄️</span>}
-                      </div>
-                    </div>
-                    <div className="font-bold text-teal-700 text-lg">₪{m.cost}</div>
-                  </div>
-                  <div className={`mt-1.5 p-1.5 rounded text-xs ${m.ketoOption.includes("N/A") ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
-                    <strong>Elia:</strong> {m.ketoOption}
-                  </div>
-                  <div 
-                    onClick={e => { e.stopPropagation(); setShowIngredients(showIngredients === m.id ? null : m.id); }} 
-                    className="mt-1 text-xs text-teal-600"
-                  >
-                    {showIngredients === m.id ? "▼ Hide ingredients" : "▶ Show ingredients"}
-                  </div>
-                  {showIngredients === m.id && (
-                    <div className="mt-1 p-2 bg-gray-100 rounded text-xs">
-                      {m.ingredients.map((ing, i) => <div key={i}>• {ing}</div>)}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Fixed costs */}
-          <div className="mt-4 bg-white rounded-xl p-3">
-            <h3 className="font-bold text-teal-700 text-sm mb-2">📌 Fixed Weekly Costs</h3>
-            {Object.values(fixedCosts).map((c, i) => (
-              <div key={i} className="flex justify-between text-xs py-1 border-b border-gray-100 last:border-0">
-                <span>{c.name} <span className="text-gray-400">({c.details})</span></span>
-                <span className="font-bold">₪{c.cost}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Tips */}
-          <div className="mt-3 bg-blue-50 rounded-xl p-3 mb-6">
-            <p className="text-xs text-gray-700">
-              💡 <strong>Tips:</strong> Pick 5-7 dinners for Sun-Thu. Aim for 🥡5+ leftover lunches. 
-              Green = keto-friendly for Elia. Your selections save automatically!
-            </p>
-          </div>
-
-          {/* Install hint */}
-          <div className="text-center text-xs text-gray-400 pb-4">
-            📱 Add to Home Screen for app-like experience
-          </div>
-        </div>
-      );
+      } catch (e) { console.log("Load failed"); }
     }
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<MealPlanner />);
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) { console.log("Save failed"); }
+    }
+
+    function showToast(msg) {
+      var toast = document.getElementById("toast");
+      toast.textContent = msg;
+      toast.className = "toast show";
+      setTimeout(function() { toast.className = "toast"; }, 2000);
+    }
+
+    function calcCost(items, selected) {
+      var total = 0;
+      selected.forEach(function(id) {
+        var item = items.find(function(x) { return x.id === id; });
+        if (item) total += item.cost;
+      });
+      return total;
+    }
+
+    function calcTotals() {
+      var breakfastTotal = calcCost(breakfastItems, state.breakfast);
+      var schoolTotal = calcCost(schoolItems, state.school);
+      var pantryTotal = calcCost(pantryItems, state.pantry);
+      var shabbosTotal = calcCost(shabbosItems, state.shabbos);
+      
+      // Calculate Elia total with quantities
+      var eliaTotal = 0;
+      var eliaCount = 0;
+      for (var id in state.eliaQty) {
+        var qty = state.eliaQty[id];
+        if (qty > 0) {
+          var p = eliaProteins.find(function(x) { return x.id === id; });
+          if (p) {
+            eliaTotal += p.cost * qty;
+            eliaCount += qty;
+          }
+        }
+      }
+      
+      var dinnersTotal = 0;
+      var leftoverTotal = 0;
+      state.dinners.forEach(function(id) {
+        var m = meals.find(function(x) { return x.id === id; });
+        if (m) {
+          dinnersTotal += m.cost;
+          leftoverTotal += m.leftoverLunches;
+        }
+      });
+      
+      return {
+        breakfastTotal: breakfastTotal,
+        schoolTotal: schoolTotal,
+        pantryTotal: pantryTotal,
+        shabbosTotal: shabbosTotal,
+        dinnersTotal: dinnersTotal,
+        eliaTotal: eliaTotal,
+        eliaCount: eliaCount,
+        leftoverTotal: leftoverTotal,
+        weeklyTotal: breakfastTotal + schoolTotal + pantryTotal + shabbosTotal + dinnersTotal + eliaTotal
+      };
+    }
+
+    function renderBudget() {
+      var totals = calcTotals();
+      var budgetMin = 550, budgetMax = 750;
+      var isInBudget = totals.weeklyTotal >= budgetMin && totals.weeklyTotal <= budgetMax;
+      var isOver = totals.weeklyTotal > budgetMax;
+      var color = isInBudget ? "green" : isOver ? "red" : "yellow";
+
+      document.getElementById("budgetBox").className = "budget-box " + color;
+      document.getElementById("budgetTotal").className = "budget-total " + color;
+      document.getElementById("budgetTotal").textContent = "₪" + totals.weeklyTotal;
+      document.getElementById("progressFill").className = "progress-fill " + color;
+      document.getElementById("progressFill").style.width = Math.min((totals.weeklyTotal / budgetMax) * 100, 100) + "%";
+
+      document.getElementById("breakfastCost").textContent = "₪" + totals.breakfastTotal;
+      document.getElementById("schoolCost").textContent = "₪" + totals.schoolTotal;
+      document.getElementById("pantryCost").textContent = "₪" + totals.pantryTotal;
+      document.getElementById("shabbosCost").textContent = "₪" + totals.shabbosTotal;
+      document.getElementById("dinnerCount").textContent = state.dinners.length;
+      document.getElementById("dinnersCost").textContent = "₪" + totals.dinnersTotal;
+      document.getElementById("eliaCount").textContent = totals.eliaCount;
+      document.getElementById("eliaCost").textContent = "₪" + totals.eliaTotal;
+      document.getElementById("leftoverCount").textContent = totals.leftoverTotal;
+      document.getElementById("dinnerBadge").textContent = state.dinners.length + " selected";
+      
+      // Section totals
+      document.getElementById("breakfastTotal").textContent = "₪" + totals.breakfastTotal;
+      document.getElementById("schoolTotal").textContent = "₪" + totals.schoolTotal;
+      document.getElementById("pantryTotal").textContent = "₪" + totals.pantryTotal;
+      document.getElementById("shabbosTotal").textContent = "₪" + totals.shabbosTotal;
+    }
+
+    function renderWeeklySection(items, selected, containerId, stateKey) {
+      var html = "";
+      items.forEach(function(item) {
+        var checked = selected.indexOf(item.id) !== -1;
+        html += '<label class="weekly-item">';
+        html += '<input type="checkbox" ' + (checked ? 'checked' : '') + ' data-item="' + item.id + '" data-section="' + stateKey + '">';
+        html += '<span class="item-name">' + item.name + '</span>';
+        html += '<span class="item-cost">₪' + item.cost + '</span>';
+        html += '</label>';
+      });
+      document.getElementById(containerId).innerHTML = html;
+    }
+    
+    function renderShabbosSection() {
+      var html = "";
+      var categories = ["Friday Night", "Shabbos Lunch", "Seudah Shlishit", "Wine"];
+      var categoryTotals = {};
+      
+      categories.forEach(function(cat) {
+        var catItems = shabbosItems.filter(function(item) { return item.category === cat; });
+        var catTotal = 0;
+        catItems.forEach(function(item) {
+          if (state.shabbos.indexOf(item.id) !== -1) catTotal += item.cost;
+        });
+        categoryTotals[cat] = catTotal;
+        
+        html += '<div style="font-size:11px;font-weight:bold;color:#92400e;margin:8px 0 4px 0;border-bottom:1px dashed #fcd34d;padding-bottom:2px;">' + cat + ' (₪' + catTotal + ')</div>';
+        catItems.forEach(function(item) {
+          var checked = state.shabbos.indexOf(item.id) !== -1;
+          html += '<label class="weekly-item">';
+          html += '<input type="checkbox" ' + (checked ? 'checked' : '') + ' data-item="' + item.id + '" data-section="shabbos">';
+          html += '<span class="item-name">' + item.name + '</span>';
+          html += '<span class="item-cost">₪' + item.cost + '</span>';
+          html += '</label>';
+        });
+      });
+      
+      document.getElementById("shabbosItems").innerHTML = html;
+    }
+
+    function renderAllSections() {
+      renderWeeklySection(breakfastItems, state.breakfast, "breakfastItems", "breakfast");
+      renderWeeklySection(schoolItems, state.school, "schoolItems", "school");
+      renderWeeklySection(pantryItems, state.pantry, "pantryItems", "pantry");
+      renderShabbosSection();
+      addSectionListeners();
+    }
+    
+    function addSectionListeners() {
+      document.querySelectorAll("[data-item]").forEach(function(el) {
+        el.onchange = function() {
+          var id = this.dataset.item;
+          var section = this.dataset.section;
+          var checked = this.checked;
+          var idx = state[section].indexOf(id);
+          if (checked && idx === -1) {
+            state[section].push(id);
+          } else if (!checked && idx !== -1) {
+            state[section].splice(idx, 1);
+          }
+          saveState();
+          renderBudget();
+          if (section === "shabbos") {
+            renderShabbosSection();
+            addSectionListeners();
+          }
+        };
+      });
+    }
+
+    function renderEliaProteins() {
+      var html = "";
+      eliaProteins.forEach(function(p) {
+        var qty = state.eliaQty[p.id] || 0;
+        var hasQty = qty > 0;
+        html += '<div class="elia-protein' + (hasQty ? ' selected' : '') + '">';
+        html += '<div style="flex:1">';
+        html += '<span class="name">' + p.name + '</span>';
+        html += '<span style="font-size:11px;color:#6b7280;margin-left:4px">₪' + p.cost + '/ea</span>';
+        html += '</div>';
+        html += '<div style="display:flex;align-items:center;gap:8px;">';
+        html += '<button class="qty-btn" data-elia="' + p.id + '" data-action="minus" style="width:28px;height:28px;border-radius:50%;border:1px solid #d1d5db;background:white;font-size:16px;cursor:pointer;">−</button>';
+        html += '<span style="min-width:20px;text-align:center;font-weight:bold;">' + qty + '</span>';
+        html += '<button class="qty-btn" data-elia="' + p.id + '" data-action="plus" style="width:28px;height:28px;border-radius:50%;border:1px solid #10b981;background:#d1fae5;font-size:16px;cursor:pointer;">+</button>';
+        if (hasQty) {
+          html += '<span style="font-weight:bold;color:#059669;min-width:45px;text-align:right;">₪' + (p.cost * qty) + '</span>';
+        }
+        html += '</div>';
+        html += '</div>';
+      });
+      document.getElementById("eliaProteins").innerHTML = html;
+      
+      document.querySelectorAll(".qty-btn").forEach(function(el) {
+        el.onclick = function() {
+          var id = this.dataset.elia;
+          var action = this.dataset.action;
+          var currentQty = state.eliaQty[id] || 0;
+          
+          if (action === "plus") {
+            state.eliaQty[id] = currentQty + 1;
+          } else if (action === "minus" && currentQty > 0) {
+            state.eliaQty[id] = currentQty - 1;
+            if (state.eliaQty[id] === 0) {
+              delete state.eliaQty[id];
+            }
+          }
+          
+          saveState();
+          renderBudget();
+          renderEliaProteins();
+        };
+      });
+    }
+
+    function renderFilters() {
+      var html = '<button class="filter-btn' + (state.filter === "all" ? " active" : "") + '" data-filter="all">All</button>';
+      for (var c in categories) {
+        var count = 0;
+        state.dinners.forEach(function(id) {
+          var m = meals.find(function(x) { return x.id === id; });
+          if (m && m.category === c) count++;
+        });
+        html += '<button class="filter-btn' + (state.filter === c ? " active" : "") + '" data-filter="' + c + '">' + categories[c].icon + ' ' + count + '</button>';
+      }
+      var totals = calcTotals();
+      html += '<span class="leftover-badge">🥡 ' + totals.leftoverTotal + '</span>';
+      document.getElementById("filters").innerHTML = html;
+      
+      document.querySelectorAll("[data-filter]").forEach(function(el) {
+        el.addEventListener("click", function() {
+          state.filter = this.dataset.filter;
+          renderFilters();
+          renderMeals();
+        });
+      });
+    }
+
+    function renderMeals() {
+      var filtered = state.filter === "all" ? meals : meals.filter(function(m) { return m.category === state.filter; });
+      var html = "";
+      filtered.forEach(function(m) {
+        var selected = state.dinners.indexOf(m.id) !== -1;
+        var cat = categories[m.category];
+        var day = state.assignedDays[m.id] || "";
+        var ketoGood = m.ketoOption.indexOf("N/A") === -1;
+        
+        html += '<div class="meal-card' + (selected ? ' selected' : '') + '" data-meal="' + m.id + '" style="--cat-color:' + cat.border + ';--cat-bg:' + cat.bg + '">';
+        html += '<div class="meal-header">';
+        html += '<div class="meal-info">';
+        html += '<div class="meal-title">';
+        html += '<span class="icon">' + cat.icon + '</span>';
+        html += '<span class="name">' + m.name + '</span>';
+        if (selected) html += '<span class="check" style="color:' + cat.border + '">✓</span>';
+        html += '</div>';
+        html += '<div class="meal-hebrew">' + m.nameHe + '</div>';
+        html += '<div class="meal-meta">';
+        html += '<span>⏱️ ' + m.prepTime + '</span>';
+        html += '<span>👥 ' + m.servings + '</span>';
+        html += '<span class="leftover">🥡 ' + m.leftoverLunches + '</span>';
+        if (m.freezable) html += '<span>❄️</span>';
+        html += '</div></div>';
+        html += '<div class="meal-price">₪' + m.cost + '</div>';
+        html += '</div>';
+        
+        // Day selector - show when meal is selected
+        if (selected) {
+          html += '<div class="day-selector" data-meal-id="' + m.id + '">';
+          html += '<span class="day-label">📅</span>';
+          ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach(function(d) {
+            var isActive = day === d;
+            html += '<button class="day-btn' + (isActive ? ' active' : '') + '" data-day="' + d + '" data-mid="' + m.id + '">' + d + '</button>';
+          });
+          if (day) {
+            html += '<button class="day-btn clear" data-day="" data-mid="' + m.id + '">✕</button>';
+          }
+          html += '</div>';
+        }
+        
+        html += '<div class="meal-keto ' + (ketoGood ? 'good' : 'bad') + '"><strong>Elia:</strong> ' + m.ketoOption + '</div>';
+        html += '<div class="meal-ingredients-toggle" data-toggle="' + m.id + '">' + (state.expandedIngredients === m.id ? '▼ Hide' : '▶ Ingredients') + '</div>';
+        if (state.expandedIngredients === m.id) {
+          html += '<div class="meal-ingredients">';
+          m.ingredients.forEach(function(i) { html += '<div>• ' + i + '</div>'; });
+          html += '</div>';
+        }
+        html += '</div>';
+      });
+      document.getElementById("mealsList").innerHTML = html;
+      
+      // Meal card click - select/deselect
+      document.querySelectorAll("[data-meal]").forEach(function(el) {
+        el.addEventListener("click", function(e) {
+          if (e.target.dataset.toggle || e.target.dataset.day !== undefined || e.target.closest('.day-selector')) return;
+          var id = parseInt(this.dataset.meal);
+          var idx = state.dinners.indexOf(id);
+          if (idx === -1) {
+            state.dinners.push(id);
+          } else {
+            state.dinners.splice(idx, 1);
+            delete state.assignedDays[id];
+          }
+          saveState();
+          renderBudget();
+          renderFilters();
+          renderMeals();
+          renderExport();
+        });
+      });
+      
+      // Day button click
+      document.querySelectorAll(".day-btn").forEach(function(btn) {
+        btn.addEventListener("click", function(e) {
+          e.stopPropagation();
+          var mid = parseInt(this.dataset.mid);
+          var day = this.dataset.day;
+          if (day) {
+            state.assignedDays[mid] = day;
+          } else {
+            delete state.assignedDays[mid];
+          }
+          saveState();
+          renderMeals();
+          renderExport();
+        });
+      });
+      
+      // Ingredients toggle
+      document.querySelectorAll("[data-toggle]").forEach(function(el) {
+        el.addEventListener("click", function(e) {
+          e.stopPropagation();
+          var id = parseInt(this.dataset.toggle);
+          state.expandedIngredients = state.expandedIngredients === id ? null : id;
+          renderMeals();
+        });
+      });
+    }
+
+    function renderExport() {
+      var panel = document.getElementById("exportPanel");
+      panel.className = state.showExport ? "export-panel" : "export-panel hidden";
+      
+      // Show summary of selected meals
+      var html = '<div style="font-size:12px;color:#6b7280;margin-bottom:10px;">';
+      html += '<strong>' + state.dinners.length + ' meals selected</strong>';
+      var assignedCount = Object.keys(state.assignedDays).length;
+      if (assignedCount < state.dinners.length) {
+        html += ' · <span style="color:#f59e0b;">' + (state.dinners.length - assignedCount) + ' need day assignment</span>';
+      }
+      html += '</div>';
+      
+      document.getElementById("exportDays").innerHTML = html;
+    }
+
+    function getSelectedIngredients(items, selected) {
+      var ingredients = [];
+      selected.forEach(function(id) {
+        var item = items.find(function(x) { return x.id === id; });
+        if (item) {
+          item.ingredients.forEach(function(ing) {
+            ingredients.push(ing);
+          });
+        }
+      });
+      return ingredients;
+    }
+
+    function generatePlanText() {
+      var totals = calcTotals();
+      var t = "";
+      
+      // ===== HEADER =====
+      t += "═══════════════════════════════════════\n";
+      t += "   🍽️ ZAFRANY FAMILY MEAL PLAN\n";
+      t += "   Week of: " + new Date().toLocaleDateString() + "\n";
+      t += "═══════════════════════════════════════\n\n";
+      
+      // ===== KIDS SECTION - What's for Dinner? =====
+      t += "👧👦 WHAT'S FOR DINNER THIS WEEK?\n";
+      t += "───────────────────────────────────────\n";
+      var dayMeals = {};
+      var unassigned = [];
+      state.dinners.forEach(function(id) {
+        var m = meals.find(function(x) { return x.id === id; });
+        if (!m) return;
+        var day = state.assignedDays[id];
+        if (day) {
+          dayMeals[day] = dayMeals[day] || [];
+          dayMeals[day].push(m.name);
+        } else {
+          unassigned.push(m.name);
+        }
+      });
+      
+      ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach(function(day) {
+        var meal = dayMeals[day] ? dayMeals[day].join(", ") : "---";
+        var dayName = {Sun:"Sunday", Mon:"Monday", Tue:"Tuesday", Wed:"Wednesday", Thu:"Thursday", Fri:"Friday", Sat:"Saturday"}[day];
+        t += dayName + ": " + meal + "\n";
+      });
+      
+      if (unassigned.length > 0) {
+        t += "\nNot yet scheduled: " + unassigned.join(", ") + "\n";
+      }
+      t += "\n";
+      
+      // ===== TZIPPY'S SECTION - Cooking Plan =====
+      t += "👩‍🍳 TZIPPY'S COOKING PLAN\n";
+      t += "───────────────────────────────────────\n\n";
+      
+      // Group by day
+      ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach(function(day) {
+        if (!dayMeals[day]) return;
+        var dayName = {Sun:"Sunday", Mon:"Monday", Tue:"Tuesday", Wed:"Wednesday", Thu:"Thursday", Fri:"Friday", Sat:"Saturday"}[day];
+        t += "▸ " + dayName.toUpperCase() + "\n";
+        state.dinners.forEach(function(id) {
+          var m = meals.find(function(x) { return x.id === id; });
+          if (!m || state.assignedDays[id] !== day) return;
+          t += "  " + m.name + " (" + m.nameHe + ")\n";
+          t += "  ⏱️ " + m.prepTime + " | 👥 " + m.servings + " servings\n";
+          if (m.leftoverLunches > 0) t += "  📦 Makes " + m.leftoverLunches + " leftover lunches!\n";
+          if (m.ketoOption.indexOf("N/A") === -1) {
+            t += "  🥑 Elia's portion: " + m.ketoOption + "\n";
+          } else {
+            t += "  ⚠️ Elia needs separate meal (see Elia add-ons)\n";
+          }
+          t += "\n";
+        });
+      });
+      
+      // Shabbos cooking
+      if (state.shabbos.length > 0) {
+        t += "▸ FRIDAY (Shabbos Prep)\n";
+        var fridayItems = shabbosItems.filter(function(s) { return s.category === "Friday Night" && state.shabbos.indexOf(s.id) !== -1; });
+        fridayItems.forEach(function(s) {
+          t += "  • " + s.name + "\n";
+        });
+        var lunchItems = shabbosItems.filter(function(s) { return s.category === "Shabbos Lunch" && state.shabbos.indexOf(s.id) !== -1; });
+        if (lunchItems.length > 0) {
+          t += "  Cholent & Kugel (put up before Shabbos)\n";
+        }
+        t += "\n";
+      }
+      
+      // Elia's separate meals
+      var eliaItems = [];
+      for (var id in state.eliaQty) {
+        if (state.eliaQty[id] > 0) {
+          var p = eliaProteins.find(function(x) { return x.id === id; });
+          if (p) eliaItems.push({ protein: p, qty: state.eliaQty[id] });
+        }
+      }
+      if (eliaItems.length > 0) {
+        t += "▸ ELIA'S KETO MEALS (for dairy nights)\n";
+        eliaItems.forEach(function(item) {
+          t += "  • " + item.protein.name + " x" + item.qty + "\n";
+        });
+        t += "\n";
+      }
+      
+      // ===== BUDGET SUMMARY =====
+      t += "💰 BUDGET: ₪" + totals.weeklyTotal + "\n";
+      t += "───────────────────────────────────────\n";
+      t += "Breakfast: ₪" + totals.breakfastTotal + " | School: ₪" + totals.schoolTotal + "\n";
+      t += "Pantry: ₪" + totals.pantryTotal + " | Shabbos: ₪" + totals.shabbosTotal + "\n";
+      t += "Dinners: ₪" + totals.dinnersTotal + " | Elia: ₪" + totals.eliaTotal + "\n";
+      t += "🥡 Leftover lunches: " + totals.leftoverTotal + "\n";
+      
+      return t;
+    }
+
+    function generateListText() {
+      var totals = calcTotals();
+      var t = "";
+      
+      // ===== SHOPPING LIST HEADER =====
+      t += "\n═══════════════════════════════════════\n";
+      t += "   🛒 ELIA'S SHOPPING LIST\n";
+      t += "   Rami Levy | " + new Date().toLocaleDateString() + "\n";
+      t += "═══════════════════════════════════════\n\n";
+      
+      // Organize by store section
+      t += "🥛 DAIRY & REFRIGERATED\n";
+      t += "───────────────────────────────────────\n";
+      state.breakfast.forEach(function(id) {
+        var item = breakfastItems.find(function(x) { return x.id === id; });
+        if (item && (item.name.includes("Yogurt") || item.name.includes("Cheese") || item.name.includes("Milk"))) {
+          t += "☐ " + item.ingredients.join(", ") + "\n";
+        }
+      });
+      state.school.forEach(function(id) {
+        var item = schoolItems.find(function(x) { return x.id === id; });
+        if (item && (item.name.includes("Cheese") || item.name.includes("Turkey"))) {
+          t += "☐ " + item.ingredients.join(", ") + "\n";
+        }
+      });
+      t += "\n";
+      
+      t += "🍞 BREAD & BAKERY\n";
+      t += "───────────────────────────────────────\n";
+      state.breakfast.forEach(function(id) {
+        var item = breakfastItems.find(function(x) { return x.id === id; });
+        if (item && (item.name.includes("Bread") || item.name.includes("Roll"))) {
+          t += "☐ " + item.ingredients.join(", ") + "\n";
+        }
+      });
+      state.school.forEach(function(id) {
+        var item = schoolItems.find(function(x) { return x.id === id; });
+        if (item && (item.name.includes("Pita") || item.name.includes("Bread"))) {
+          t += "☐ " + item.ingredients.join(", ") + "\n";
+        }
+      });
+      t += "\n";
+      
+      t += "🍎 PRODUCE\n";
+      t += "───────────────────────────────────────\n";
+      state.breakfast.forEach(function(id) {
+        var item = breakfastItems.find(function(x) { return x.id === id; });
+        if (item && item.name.includes("Fruit")) {
+          t += "☐ " + item.ingredients.join(", ") + "\n";
+        }
+      });
+      state.school.forEach(function(id) {
+        var item = schoolItems.find(function(x) { return x.id === id; });
+        if (item && item.name.includes("Apple")) {
+          t += "☐ " + item.ingredients.join(", ") + "\n";
+        }
+      });
+      // Add salad veggies from shabbos
+      state.shabbos.forEach(function(id) {
+        var item = shabbosItems.find(function(x) { return x.id === id; });
+        if (item && item.name.includes("Salad")) {
+          t += "☐ " + item.ingredients.join(", ") + "\n";
+        }
+      });
+      t += "\n";
+      
+      t += "🥩 MEAT & FISH\n";
+      t += "───────────────────────────────────────\n";
+      // Shabbos proteins
+      state.shabbos.forEach(function(id) {
+        var item = shabbosItems.find(function(x) { return x.id === id; });
+        if (item && (item.name.includes("Salmon") || item.name.includes("Chicken") || item.name.includes("Cholent meat"))) {
+          t += "☐ " + item.ingredients.join(", ") + " [Shabbos]\n";
+        }
+      });
+      // Dinner proteins
+      state.dinners.forEach(function(id) {
+        var m = meals.find(function(x) { return x.id === id; });
+        if (!m) return;
+        var day = state.assignedDays[id] || "";
+        m.ingredients.forEach(function(ing) {
+          if (ing.toLowerCase().includes("chicken") || ing.toLowerCase().includes("beef") || 
+              ing.toLowerCase().includes("meat") || ing.toLowerCase().includes("salmon") ||
+              ing.toLowerCase().includes("fish") || ing.toLowerCase().includes("turkey") ||
+              ing.toLowerCase().includes("schnitzel") || ing.toLowerCase().includes("kubeh") ||
+              ing.toLowerCase().includes("falafel") || ing.toLowerCase().includes("patties")) {
+            t += "☐ " + ing + (day ? " [" + day + "]" : "") + "\n";
+          }
+        });
+      });
+      // Elia proteins
+      for (var id in state.eliaQty) {
+        if (state.eliaQty[id] > 0) {
+          var p = eliaProteins.find(function(x) { return x.id === id; });
+          if (p) {
+            p.ingredients.forEach(function(ing) {
+              if (ing.toLowerCase().includes("chicken") || ing.toLowerCase().includes("beef") || 
+                  ing.toLowerCase().includes("salmon") || ing.toLowerCase().includes("steak")) {
+                t += "☐ " + ing + " x" + state.eliaQty[id] + " [Elia]\n";
+              }
+            });
+          }
+        }
+      }
+      t += "\n";
+      
+      t += "🥫 PANTRY & DRY GOODS\n";
+      t += "───────────────────────────────────────\n";
+      state.pantry.forEach(function(id) {
+        var item = pantryItems.find(function(x) { return x.id === id; });
+        if (item) t += "☐ " + item.ingredients.join(", ") + "\n";
+      });
+      state.breakfast.forEach(function(id) {
+        var item = breakfastItems.find(function(x) { return x.id === id; });
+        if (item && (item.name.includes("Cereal") || item.name.includes("Spread"))) {
+          t += "☐ " + item.ingredients.join(", ") + "\n";
+        }
+      });
+      // Rice/pasta from dinners
+      state.dinners.forEach(function(id) {
+        var m = meals.find(function(x) { return x.id === id; });
+        if (!m) return;
+        m.ingredients.forEach(function(ing) {
+          if (ing.toLowerCase().includes("rice") || ing.toLowerCase().includes("pasta") ||
+              ing.toLowerCase().includes("sauce") || ing.toLowerCase().includes("canned")) {
+            t += "☐ " + ing + "\n";
+          }
+        });
+      });
+      t += "\n";
+      
+      t += "🍿 SNACKS\n";
+      t += "───────────────────────────────────────\n";
+      state.school.forEach(function(id) {
+        var item = schoolItems.find(function(x) { return x.id === id; });
+        if (item && item.name.includes("Snack")) {
+          t += "☐ " + item.ingredients.join(", ") + "\n";
+        }
+      });
+      t += "\n";
+      
+      t += "❄️ FROZEN\n";
+      t += "───────────────────────────────────────\n";
+      state.dinners.forEach(function(id) {
+        var m = meals.find(function(x) { return x.id === id; });
+        if (!m) return;
+        m.ingredients.forEach(function(ing) {
+          if (ing.toLowerCase().includes("frozen") || ing.toLowerCase().includes("fries")) {
+            t += "☐ " + ing + "\n";
+          }
+        });
+      });
+      state.shabbos.forEach(function(id) {
+        var item = shabbosItems.find(function(x) { return x.id === id; });
+        if (item && item.name.includes("Dessert")) {
+          t += "☐ " + item.ingredients.join(", ") + "\n";
+        }
+      });
+      t += "\n";
+      
+      t += "🍷 OTHER\n";
+      t += "───────────────────────────────────────\n";
+      state.shabbos.forEach(function(id) {
+        var item = shabbosItems.find(function(x) { return x.id === id; });
+        if (item && item.name.includes("Wine")) {
+          t += "☐ " + item.ingredients.join(", ") + "\n";
+        }
+      });
+      // Challah ingredients
+      state.shabbos.forEach(function(id) {
+        var item = shabbosItems.find(function(x) { return x.id === id; });
+        if (item && item.name.includes("Challah")) {
+          t += "☐ " + item.ingredients.join(", ") + "\n";
+        }
+      });
+      t += "\n";
+      
+      t += "═══════════════════════════════════════\n";
+      t += "💰 ESTIMATED TOTAL: ₪" + totals.weeklyTotal + "\n";
+      t += "═══════════════════════════════════════\n";
+      
+      return t;
+    }
+
+    function copyText(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+          showToast("✅ Copied!");
+        }).catch(function() {
+          fallbackCopy(text);
+        });
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.cssText = "position:fixed;opacity:0";
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand("copy");
+        showToast("✅ Copied!");
+      } catch (e) {
+        showToast("❌ Copy failed");
+      }
+      document.body.removeChild(ta);
+    }
+
+    function downloadCSV() {
+      var totals = calcTotals();
+      var csv = "Category,Item,Cost,Ingredients\n";
+      
+      state.breakfast.forEach(function(id) {
+        var item = breakfastItems.find(function(x) { return x.id === id; });
+        if (item) csv += "Breakfast," + item.name + "," + item.cost + ",\"" + item.ingredients.join(", ") + "\"\n";
+      });
+      state.school.forEach(function(id) {
+        var item = schoolItems.find(function(x) { return x.id === id; });
+        if (item) csv += "School," + item.name + "," + item.cost + ",\"" + item.ingredients.join(", ") + "\"\n";
+      });
+      state.pantry.forEach(function(id) {
+        var item = pantryItems.find(function(x) { return x.id === id; });
+        if (item) csv += "Pantry," + item.name + "," + item.cost + ",\"" + item.ingredients.join(", ") + "\"\n";
+      });
+      state.shabbos.forEach(function(id) {
+        var item = shabbosItems.find(function(x) { return x.id === id; });
+        if (item) csv += "Shabbos," + item.name + "," + item.cost + ",\"" + item.ingredients.join(", ") + "\"\n";
+      });
+      state.dinners.forEach(function(id) {
+        var m = meals.find(function(x) { return x.id === id; });
+        if (m) csv += "Dinner," + m.name + "," + m.cost + ",\"" + m.ingredients.join(", ") + "\"\n";
+      });
+      for (var id in state.eliaQty) {
+        if (state.eliaQty[id] > 0) {
+          var p = eliaProteins.find(function(x) { return x.id === id; });
+          if (p) csv += "Elia," + p.name + " x" + state.eliaQty[id] + "," + (p.cost * state.eliaQty[id]) + ",\"" + p.ingredients.join(", ") + "\"\n";
+        }
+      }
+      csv += "\nTOTAL,," + totals.weeklyTotal + ",";
+      
+      var blob = new Blob([csv], { type: "text/csv" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "meal-plan-" + new Date().toISOString().split("T")[0] + ".csv";
+      a.click();
+      showToast("✅ CSV downloaded!");
+    }
+
+    function printPlan() {
+      var totals = calcTotals();
+      
+      // Build organized data
+      var dayMeals = { Sun: [], Mon: [], Tue: [], Wed: [], Thu: [], Fri: [], Sat: [] };
+      var unassigned = [];
+      state.dinners.forEach(function(id) {
+        var m = meals.find(function(x) { return x.id === id; });
+        if (!m) return;
+        var day = state.assignedDays[id];
+        if (day && dayMeals[day]) {
+          dayMeals[day].push(m);
+        } else {
+          unassigned.push(m);
+        }
+      });
+      
+      var eliaItems = [];
+      for (var id in state.eliaQty) {
+        if (state.eliaQty[id] > 0) {
+          var p = eliaProteins.find(function(x) { return x.id === id; });
+          if (p) eliaItems.push({ protein: p, qty: state.eliaQty[id] });
+        }
+      }
+      
+      var dayNames = { Sun: "Sunday", Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursday", Fri: "Friday", Sat: "Saturday" };
+      var dayEmoji = { Sun: "☀️", Mon: "🌙", Tue: "🌟", Wed: "💫", Thu: "⭐", Fri: "🕯️", Sat: "✨" };
+      
+      // Build HTML
+      var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+      html += '<meta name="viewport" content="width=device-width, initial-scale=1.0">';
+      html += '<title>Zafrany Meal Plan</title>';
+      html += '<style>';
+      html += '* { box-sizing: border-box; margin: 0; padding: 0; }';
+      html += 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; }';
+      html += '.page { max-width: 700px; margin: 0 auto; padding: 20px; background: white; min-height: 100vh; }';
+      html += '@media print { .page { padding: 15px; } .no-print { display: none; } .page-break { page-break-before: always; } }';
+      
+      // Header styles
+      html += '.header { text-align: center; padding: 15px 0 20px; border-bottom: 3px solid #0d9488; margin-bottom: 20px; }';
+      html += '.header h1 { font-size: 28px; color: #0d9488; margin-bottom: 5px; }';
+      html += '.header .date { color: #666; font-size: 14px; }';
+      
+      // Kids section - big friendly calendar
+      html += '.kids-section { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 16px; padding: 20px; margin-bottom: 25px; }';
+      html += '.kids-title { font-size: 24px; text-align: center; margin-bottom: 15px; color: #92400e; }';
+      html += '.kids-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }';
+      html += '.kids-day { background: white; border-radius: 10px; padding: 10px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }';
+      html += '.kids-day-name { font-weight: bold; font-size: 12px; color: #666; margin-bottom: 4px; }';
+      html += '.kids-meal { font-size: 14px; font-weight: bold; color: #1f2937; }';
+      html += '.kids-meal.empty { color: #9ca3af; font-style: italic; font-size: 12px; }';
+      
+      // Tzippy section
+      html += '.tzippy-section { margin-bottom: 25px; }';
+      html += '.tzippy-title { background: #ec4899; color: white; padding: 12px 16px; border-radius: 12px 12px 0 0; font-size: 20px; }';
+      html += '.tzippy-content { border: 2px solid #ec4899; border-top: none; border-radius: 0 0 12px 12px; padding: 15px; }';
+      html += '.cook-day { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed #e5e7eb; }';
+      html += '.cook-day:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }';
+      html += '.cook-day-name { background: #fdf2f8; color: #be185d; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-block; margin-bottom: 8px; }';
+      html += '.cook-meal-name { font-size: 18px; font-weight: bold; color: #1f2937; }';
+      html += '.cook-meal-hebrew { color: #666; font-size: 14px; }';
+      html += '.cook-meta { display: flex; gap: 15px; margin: 8px 0; font-size: 13px; color: #6b7280; flex-wrap: wrap; }';
+      html += '.cook-keto { background: #dcfce7; color: #166534; padding: 6px 10px; border-radius: 6px; font-size: 12px; margin-top: 5px; }';
+      html += '.cook-keto.warning { background: #fee2e2; color: #991b1b; }';
+      html += '.cook-ingredients { background: #f9fafb; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 12px; }';
+      html += '.cook-ingredients-title { font-weight: bold; margin-bottom: 5px; }';
+      
+      // Shopping section  
+      html += '.shop-section { margin-bottom: 25px; }';
+      html += '.shop-title { background: #3b82f6; color: white; padding: 12px 16px; border-radius: 12px 12px 0 0; font-size: 20px; }';
+      html += '.shop-content { border: 2px solid #3b82f6; border-top: none; border-radius: 0 0 12px 12px; padding: 15px; }';
+      html += '.shop-category { margin-bottom: 15px; }';
+      html += '.shop-category-name { font-weight: bold; color: #1e40af; padding-bottom: 5px; border-bottom: 2px solid #dbeafe; margin-bottom: 8px; font-size: 15px; }';
+      html += '.shop-item { display: flex; align-items: flex-start; padding: 4px 0; font-size: 14px; }';
+      html += '.shop-checkbox { width: 18px; height: 18px; border: 2px solid #9ca3af; border-radius: 4px; margin-right: 10px; flex-shrink: 0; margin-top: 2px; }';
+      html += '.shop-item-text { flex: 1; }';
+      html += '.shop-tag { font-size: 11px; color: #6b7280; background: #f3f4f6; padding: 1px 6px; border-radius: 4px; margin-left: 5px; }';
+      
+      // Budget
+      html += '.budget { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-radius: 12px; padding: 20px; margin-top: 20px; }';
+      html += '.budget-total { font-size: 28px; font-weight: bold; color: #059669; text-align: center; }';
+      html += '.budget-breakdown { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; font-size: 13px; }';
+      html += '.budget-item { text-align: center; }';
+      html += '.budget-item-value { font-weight: bold; color: #065f46; }';
+      
+      html += '</style></head><body>';
+      
+      // ==================== PAGE 1: KIDS & OVERVIEW ====================
+      html += '<div class="page">';
+      html += '<div class="header">';
+      html += '<h1>🍽️ Zafrany Family Meals</h1>';
+      html += '<div class="date">Week of ' + new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) + '</div>';
+      html += '</div>';
+      
+      // Kids section - What's for dinner calendar
+      html += '<div class="kids-section">';
+      html += '<div class="kids-title">👧👦 What\'s for Dinner?</div>';
+      html += '<div class="kids-grid">';
+      
+      ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach(function(day) {
+        var mealList = dayMeals[day];
+        html += '<div class="kids-day">';
+        html += '<div class="kids-day-name">' + dayEmoji[day] + ' ' + dayNames[day] + '</div>';
+        if (mealList.length > 0) {
+          html += '<div class="kids-meal">' + mealList.map(function(m) { return m.name.split(" + ")[0].split(" ")[0]; }).join(", ") + '</div>';
+        } else {
+          html += '<div class="kids-meal empty">TBD</div>';
+        }
+        html += '</div>';
+      });
+      html += '</div></div>';
+      
+      // Budget summary
+      html += '<div class="budget">';
+      html += '<div class="budget-total">💰 ₪' + totals.weeklyTotal + '</div>';
+      html += '<div class="budget-breakdown">';
+      html += '<div class="budget-item"><div>Breakfast</div><div class="budget-item-value">₪' + totals.breakfastTotal + '</div></div>';
+      html += '<div class="budget-item"><div>School</div><div class="budget-item-value">₪' + totals.schoolTotal + '</div></div>';
+      html += '<div class="budget-item"><div>Shabbos</div><div class="budget-item-value">₪' + totals.shabbosTotal + '</div></div>';
+      html += '<div class="budget-item"><div>Dinners</div><div class="budget-item-value">₪' + totals.dinnersTotal + '</div></div>';
+      html += '<div class="budget-item"><div>Elia</div><div class="budget-item-value">₪' + totals.eliaTotal + '</div></div>';
+      html += '<div class="budget-item"><div>Pantry</div><div class="budget-item-value">₪' + totals.pantryTotal + '</div></div>';
+      html += '</div>';
+      html += '<div style="text-align:center;margin-top:10px;font-size:14px;">🥡 ' + totals.leftoverTotal + ' leftover lunches</div>';
+      html += '</div>';
+      
+      html += '</div>'; // end page 1
+      
+      // ==================== PAGE 2: TZIPPY'S COOKING PLAN ====================
+      html += '<div class="page page-break">';
+      html += '<div class="tzippy-section">';
+      html += '<div class="tzippy-title">👩‍🍳 Tzippy\'s Cooking Plan</div>';
+      html += '<div class="tzippy-content">';
+      
+      ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach(function(day) {
+        var mealList = dayMeals[day];
+        if (mealList.length === 0) return;
+        
+        mealList.forEach(function(m) {
+          html += '<div class="cook-day">';
+          html += '<div class="cook-day-name">' + dayNames[day].toUpperCase() + '</div>';
+          html += '<div class="cook-meal-name">' + m.name + '</div>';
+          html += '<div class="cook-meal-hebrew">' + m.nameHe + '</div>';
+          html += '<div class="cook-meta">';
+          html += '<span>⏱️ ' + m.prepTime + '</span>';
+          html += '<span>👥 ' + m.servings + ' servings</span>';
+          if (m.leftoverLunches > 0) html += '<span>📦 ' + m.leftoverLunches + ' leftover lunches</span>';
+          if (m.freezable) html += '<span>❄️ Freezable</span>';
+          html += '</div>';
+          
+          if (m.ketoOption.indexOf("N/A") === -1) {
+            html += '<div class="cook-keto">🥑 <strong>Elia\'s portion:</strong> ' + m.ketoOption + '</div>';
+          } else {
+            html += '<div class="cook-keto warning">⚠️ <strong>Elia needs separate meal</strong> (see add-ons below)</div>';
+          }
+          
+          html += '<div class="cook-ingredients">';
+          html += '<div class="cook-ingredients-title">Ingredients needed:</div>';
+          html += m.ingredients.join(" • ");
+          html += '</div>';
+          html += '</div>';
+        });
+      });
+      
+      // Shabbos section in cooking
+      if (state.shabbos.length > 0) {
+        html += '<div class="cook-day">';
+        html += '<div class="cook-day-name" style="background:#fef3c7;color:#92400e;">FRIDAY - SHABBOS PREP</div>';
+        
+        var fridayItems = shabbosItems.filter(function(s) { return s.category === "Friday Night" && state.shabbos.indexOf(s.id) !== -1; });
+        var lunchItems = shabbosItems.filter(function(s) { return s.category === "Shabbos Lunch" && state.shabbos.indexOf(s.id) !== -1; });
+        var seudahItems = shabbosItems.filter(function(s) { return s.category === "Seudah Shlishit" && state.shabbos.indexOf(s.id) !== -1; });
+        
+        html += '<div class="cook-meal-name">Shabbos Meals</div>';
+        html += '<div class="cook-meta" style="flex-direction:column;gap:5px;">';
+        if (fridayItems.length > 0) html += '<div><strong>Friday Night:</strong> ' + fridayItems.map(function(s) { return s.name; }).join(", ") + '</div>';
+        if (lunchItems.length > 0) html += '<div><strong>Shabbos Lunch:</strong> ' + lunchItems.map(function(s) { return s.name; }).join(", ") + '</div>';
+        if (seudahItems.length > 0) html += '<div><strong>Seudah Shlishit:</strong> ' + seudahItems.map(function(s) { return s.name; }).join(", ") + '</div>';
+        html += '</div>';
+        html += '<div class="cook-keto">🥑 <strong>Elia:</strong> Salmon, chicken, salads, keto cholent (skip challah, rice, kugel, bread)</div>';
+        html += '</div>';
+      }
+      
+      // Elia's add-ons
+      if (eliaItems.length > 0) {
+        html += '<div class="cook-day" style="background:#ecfdf5;border-radius:8px;padding:12px;margin-top:10px;">';
+        html += '<div class="cook-day-name" style="background:#d1fae5;color:#065f46;">🥑 ELIA\'S KETO ADD-ONS</div>';
+        html += '<div class="cook-meal-name">For Dairy & Non-Keto Nights</div>';
+        html += '<div class="cook-meta" style="flex-direction:column;">';
+        eliaItems.forEach(function(item) {
+          html += '<div>• ' + item.protein.name + ' <strong>x' + item.qty + '</strong></div>';
+        });
+        html += '</div></div>';
+      }
+      
+      html += '</div></div></div>'; // end tzippy section, page 2
+      
+      // ==================== PAGE 3: ELIA'S SHOPPING LIST ====================
+      html += '<div class="page page-break">';
+      html += '<div class="shop-section">';
+      html += '<div class="shop-title">🛒 Elia\'s Shopping List - Rami Levy</div>';
+      html += '<div class="shop-content">';
+      
+      function shopItem(text, tag) {
+        var tagHtml = tag ? '<span class="shop-tag">' + tag + '</span>' : '';
+        return '<div class="shop-item"><div class="shop-checkbox"></div><div class="shop-item-text">' + text + tagHtml + '</div></div>';
+      }
+      
+      // DAIRY
+      html += '<div class="shop-category"><div class="shop-category-name">🥛 Dairy & Refrigerated</div>';
+      state.breakfast.forEach(function(id) {
+        var item = breakfastItems.find(function(x) { return x.id === id; });
+        if (item && (item.name.includes("Yogurt") || item.name.includes("Cheese"))) {
+          html += shopItem(item.ingredients.join(", "), "Breakfast");
+        }
+      });
+      state.school.forEach(function(id) {
+        var item = schoolItems.find(function(x) { return x.id === id; });
+        if (item && (item.name.includes("Cheese") || item.name.includes("Turkey"))) {
+          html += shopItem(item.ingredients.join(", "), "School");
+        }
+      });
+      html += '</div>';
+      
+      // BREAD
+      html += '<div class="shop-category"><div class="shop-category-name">🍞 Bread & Bakery</div>';
+      state.breakfast.forEach(function(id) {
+        var item = breakfastItems.find(function(x) { return x.id === id; });
+        if (item && item.name.includes("Bread")) html += shopItem(item.ingredients.join(", "), "Breakfast");
+      });
+      state.school.forEach(function(id) {
+        var item = schoolItems.find(function(x) { return x.id === id; });
+        if (item && (item.name.includes("Pita") || item.name.includes("Bread"))) html += shopItem(item.ingredients.join(", "), "School");
+      });
+      state.shabbos.forEach(function(id) {
+        var item = shabbosItems.find(function(x) { return x.id === id; });
+        if (item && item.name.includes("Challah")) html += shopItem(item.ingredients.join(", "), "Shabbos");
+      });
+      html += '</div>';
+      
+      // PRODUCE
+      html += '<div class="shop-category"><div class="shop-category-name">🥬 Produce</div>';
+      state.breakfast.forEach(function(id) {
+        var item = breakfastItems.find(function(x) { return x.id === id; });
+        if (item && item.name.includes("Fruit")) html += shopItem(item.ingredients.join(", "));
+      });
+      state.school.forEach(function(id) {
+        var item = schoolItems.find(function(x) { return x.id === id; });
+        if (item && item.name.includes("Apple")) html += shopItem(item.ingredients.join(", "));
+      });
+      state.shabbos.forEach(function(id) {
+        var item = shabbosItems.find(function(x) { return x.id === id; });
+        if (item && item.name.includes("Salad")) html += shopItem(item.ingredients.join(", "), "Shabbos");
+      });
+      // Dinner veggies
+      state.dinners.forEach(function(did) {
+        var m = meals.find(function(x) { return x.id === did; });
+        if (!m) return;
+        var day = state.assignedDays[did];
+        m.ingredients.forEach(function(ing) {
+          var lower = ing.toLowerCase();
+          if (lower.includes("veggies") || lower.includes("vegetable") || lower.includes("carrot") || 
+              lower.includes("potato") || lower.includes("onion") || lower.includes("pepper") ||
+              lower.includes("celery") || lower.includes("lettuce") || lower.includes("salad") ||
+              lower.includes("tomato") || lower.includes("zucchini") || lower.includes("mushroom")) {
+            html += shopItem(ing, day || "Dinner");
+          }
+        });
+      });
+      html += '</div>';
+      
+      // MEAT & FISH
+      html += '<div class="shop-category"><div class="shop-category-name">🥩 Meat & Fish</div>';
+      state.shabbos.forEach(function(id) {
+        var item = shabbosItems.find(function(x) { return x.id === id; });
+        if (item && (item.name.includes("Salmon") || item.name.includes("Chicken") || item.name.includes("Cholent"))) {
+          html += shopItem(item.ingredients.join(", "), "Shabbos");
+        }
+      });
+      state.dinners.forEach(function(did) {
+        var m = meals.find(function(x) { return x.id === did; });
+        if (!m) return;
+        var day = state.assignedDays[did];
+        m.ingredients.forEach(function(ing) {
+          var lower = ing.toLowerCase();
+          if (lower.includes("chicken") || lower.includes("beef") || lower.includes("meat") || 
+              lower.includes("salmon") || lower.includes("fish") || lower.includes("schnitzel") ||
+              lower.includes("kubeh") || lower.includes("patties") || lower.includes("wings") ||
+              lower.includes("turkey") || lower.includes("falafel")) {
+            html += shopItem(ing, day || "Dinner");
+          }
+        });
+      });
+      eliaItems.forEach(function(item) {
+        item.protein.ingredients.forEach(function(ing) {
+          var lower = ing.toLowerCase();
+          if (lower.includes("chicken") || lower.includes("beef") || lower.includes("salmon") || lower.includes("steak")) {
+            html += shopItem(ing + (item.qty > 1 ? " x" + item.qty : ""), "Elia");
+          }
+        });
+      });
+      html += '</div>';
+      
+      // PANTRY
+      html += '<div class="shop-category"><div class="shop-category-name">🥫 Pantry & Dry Goods</div>';
+      state.pantry.forEach(function(id) {
+        var item = pantryItems.find(function(x) { return x.id === id; });
+        if (item) html += shopItem(item.ingredients.join(", "));
+      });
+      state.dinners.forEach(function(did) {
+        var m = meals.find(function(x) { return x.id === did; });
+        if (!m) return;
+        m.ingredients.forEach(function(ing) {
+          var lower = ing.toLowerCase();
+          if (lower.includes("rice") || lower.includes("pasta") || lower.includes("sauce") || 
+              lower.includes("canned") || lower.includes("soy") || lower.includes("spices") ||
+              lower.includes("oil") || lower.includes("breadcrumb")) {
+            html += shopItem(ing);
+          }
+        });
+      });
+      html += '</div>';
+      
+      // SNACKS
+      html += '<div class="shop-category"><div class="shop-category-name">🍿 Snacks</div>';
+      state.school.forEach(function(id) {
+        var item = schoolItems.find(function(x) { return x.id === id; });
+        if (item && item.name.includes("Snack")) html += shopItem(item.ingredients.join(", "));
+      });
+      html += '</div>';
+      
+      // FROZEN
+      html += '<div class="shop-category"><div class="shop-category-name">❄️ Frozen</div>';
+      state.dinners.forEach(function(did) {
+        var m = meals.find(function(x) { return x.id === did; });
+        if (!m) return;
+        m.ingredients.forEach(function(ing) {
+          if (ing.toLowerCase().includes("frozen") || ing.toLowerCase().includes("fries")) {
+            html += shopItem(ing);
+          }
+        });
+      });
+      html += '</div>';
+      
+      // WINE & OTHER
+      var hasWine = state.shabbos.indexOf("sh16") !== -1;
+      if (hasWine) {
+        html += '<div class="shop-category"><div class="shop-category-name">🍷 Wine</div>';
+        html += shopItem("Bottle of wine (if needed this week)", "Shabbos");
+        html += '</div>';
+      }
+      
+      html += '</div></div>'; // end shop content & section
+      html += '</div>'; // end page 3
+      
+      // Close button (for viewing)
+      html += '<div class="no-print" style="text-align:center;padding:30px;">';
+      html += '<button onclick="window.print()" style="padding:15px 30px;font-size:16px;background:#0d9488;color:white;border:none;border-radius:8px;cursor:pointer;margin-right:10px;">🖨️ Print / Save PDF</button>';
+      html += '<button onclick="window.close()" style="padding:15px 30px;font-size:16px;background:#6b7280;color:white;border:none;border-radius:8px;cursor:pointer;">✕ Close</button>';
+      html += '</div>';
+      
+      html += '</body></html>';
+      
+      // Open in new window
+      var w = window.open("", "_blank");
+      if (w) {
+        w.document.write(html);
+        w.document.close();
+      } else {
+        // Fallback - show in overlay
+        var overlay = document.createElement("div");
+        overlay.id = "printOverlay";
+        overlay.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:white;z-index:9999;overflow:auto;";
+        overlay.innerHTML = html;
+        document.body.appendChild(overlay);
+        showToast("Scroll to view plan. Use browser Share to save.");
+      }
+    }
+
+    function sharePlan() {
+      var content = generatePlanText() + "\n\n" + generateListText();
+      
+      if (navigator.share) {
+        navigator.share({
+          title: 'Zafrany Meal Plan',
+          text: content
+        }).then(function() {
+          showToast("✅ Shared!");
+        }).catch(function(err) {
+          if (err.name !== 'AbortError') {
+            copyText(content);
+          }
+        });
+      } else {
+        // Fallback to copy
+        copyText(content);
+        showToast("✅ Copied! Paste in WhatsApp/Notes");
+      }
+    }
+
+    // Initialize
+    loadState();
+    renderBudget();
+    renderAllSections();
+    renderEliaProteins();
+    renderFilters();
+    renderMeals();
+    renderExport();
+
+    // Event listeners
+    document.getElementById("exportBtn").addEventListener("click", function() {
+      state.showExport = !state.showExport;
+      this.textContent = state.showExport ? "✕ Close" : "📤 Export";
+      renderExport();
+    });
+
+    document.getElementById("clearBtn").addEventListener("click", function() {
+      if (confirm("Clear all selections?")) {
+        state.breakfast = [];
+        state.school = [];
+        state.pantry = [];
+        state.shabbos = [];
+        state.dinners = [];
+        state.eliaQty = {};
+        state.assignedDays = {};
+        saveState();
+        renderBudget();
+        renderAllSections();
+        renderEliaProteins();
+        renderFilters();
+        renderMeals();
+        renderExport();
+        showToast("🗑️ Cleared!");
+      }
+    });
+
+    document.getElementById("copyPlanBtn").addEventListener("click", function() {
+      copyText(generatePlanText());
+    });
+
+    document.getElementById("copyListBtn").addEventListener("click", function() {
+      copyText(generateListText());
+    });
+
+    document.getElementById("downloadCSVBtn").addEventListener("click", downloadCSV);
+    document.getElementById("printBtn").addEventListener("click", printPlan);
+    document.getElementById("shareBtn").addEventListener("click", sharePlan);
   </script>
 </body>
 </html>
