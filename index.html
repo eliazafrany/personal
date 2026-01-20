@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Meal Planner">
+  <meta name="theme-color" content="#0d9488">
+  <title>Kol Family Meal Planner</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { -webkit-tap-highlight-color: transparent; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <div id="root"></div>
+  
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <script type="text/babel">
+    const { useState, useMemo, useEffect } = React;
+
+    const meals = [
+      { id: 1, name: "Air Fryer Schnitzel + Rice", nameHe: "שניצל + אורז", category: "chicken", cost: 45, servings: 6, leftoverLunches: 2, ketoOption: "Schnitzel no breading + cauliflower", prepTime: "15 min", ingredients: ["Frozen schnitzel 700g (17.90)", "Rice 500g (8)", "Frozen veggies (11.60)", "Oil (7.50)"] },
+      { id: 2, name: "Chicken Vegetable Soup", nameHe: "מרק עוף", category: "chicken", cost: 42, servings: 8, leftoverLunches: 3, ketoOption: "Skip potatoes, extra chicken", prepTime: "25 min", ingredients: ["Whole chicken (24)", "Carrots (3)", "Potatoes (4)", "Celery (6)", "Onion (2)", "Spices (3)"], freezable: true },
+      { id: 3, name: "Roasted Chicken Legs + Potatoes", nameHe: "שוקיים + תפו״א", category: "chicken", cost: 48, servings: 6, leftoverLunches: 2, ketoOption: "Legs + roasted zucchini", prepTime: "45 min", ingredients: ["Chicken legs 1kg (29)", "Potatoes 1kg (6)", "Onions (2)", "Oil & spices (11)"] },
+      { id: 4, name: "Chicken Stir-Fry + Rice", nameHe: "מוקפץ עוף", category: "chicken", cost: 52, servings: 6, leftoverLunches: 2, ketoOption: "Over cauliflower rice", prepTime: "20 min", ingredients: ["Chicken breast 1kg (41)", "Mixed veggies (11.60)", "Rice (8)", "Soy sauce (10)", "Garlic (2)"] },
+      { id: 5, name: "Chicken Wings + Fries", nameHe: "כנפיים + צ׳יפס", category: "chicken", cost: 38, servings: 5, leftoverLunches: 1, ketoOption: "Wings only + salad", prepTime: "30 min", ingredients: ["Chicken wings 1kg (12)", "Frozen fries (16.20)", "Ketchup (10)"] },
+      { id: 6, name: "Meatballs + Mashed Potatoes", nameHe: "קציצות + פירה", category: "meat", cost: 55, servings: 6, leftoverLunches: 2, ketoOption: "No bread + cauliflower mash", prepTime: "35 min", ingredients: ["Ground beef 500g (27)", "Breadcrumbs (6)", "Potatoes (6)", "Onion (2)", "Spices (5)", "Oil (9)"], freezable: true },
+      { id: 7, name: "Bolognese Pasta", nameHe: "פסטה בולונז", category: "meat", cost: 48, servings: 6, leftoverLunches: 3, ketoOption: "Over zucchini noodles", prepTime: "30 min", ingredients: ["Ground beef 500g (27)", "Pasta 1kg (10.20)", "Tomato sauce (11)", "Onion (4)", "Spices (5)"], freezable: true },
+      { id: 8, name: "Beef Kubeh Soup", nameHe: "מרק קובה", category: "meat", cost: 40, servings: 8, leftoverLunches: 3, ketoOption: "Soup only, no dumplings", prepTime: "20 min", ingredients: ["Frozen kubeh (20.70)", "Beets (5)", "Lemon (3)", "Celery (6)", "Spices (5)"], freezable: true },
+      { id: 9, name: "Hamburgers + Fries", nameHe: "המבורגר + צ׳יפס", category: "meat", cost: 58, servings: 5, leftoverLunches: 0, ketoOption: "Lettuce wrap burger", prepTime: "20 min", ingredients: ["Ground beef 500g (27)", "Burger buns (12)", "Frozen fries (16.20)", "Toppings (8)", "Condiments (5)"] },
+      { id: 10, name: "Stuffed Peppers", nameHe: "פלפל ממולא", category: "meat", cost: 50, servings: 6, leftoverLunches: 2, ketoOption: "No rice, extra meat", prepTime: "45 min", ingredients: ["Ground beef 500g (27)", "Bell peppers (10)", "Rice (8)", "Tomato sauce (5.50)", "Spices (5)"] },
+      { id: 11, name: "Baked Salmon + Rice", nameHe: "סלמון + אורז", category: "fish", cost: 65, servings: 6, leftoverLunches: 2, ketoOption: "Salmon + roasted veggies", prepTime: "25 min", ingredients: ["Salmon fillet (39)", "Rice (8)", "Lemon (3)", "Olive oil (10)", "Herbs (5)"] },
+      { id: 12, name: "Fish Schnitzel + Salad", nameHe: "שניצל דג + סלט", category: "fish", cost: 42, servings: 5, leftoverLunches: 1, ketoOption: "Grilled fish no breading", prepTime: "20 min", ingredients: ["Fish schnitzel 700g (25.20)", "Salad veggies (12)", "Dressing (5)"] },
+      { id: 13, name: "Fish Patties in Sauce", nameHe: "קציצות דג ברוטב", category: "fish", cost: 45, servings: 6, leftoverLunches: 2, ketoOption: "Fish patties work!", prepTime: "30 min", ingredients: ["Fish patties 700g (26.40)", "Tomato sauce (5.50)", "Rice (8)", "Spices (5)"] },
+      { id: 14, name: "Cheese Pasta", nameHe: "פסטה גבינה", category: "dairy", cost: 32, servings: 5, leftoverLunches: 2, ketoOption: "N/A - dairy", prepTime: "15 min", ingredients: ["Pasta 500g (10.20)", "Yellow cheese (12)", "Butter (5)", "Cream (5)"] },
+      { id: 15, name: "Pizza Night", nameHe: "פיצה ביתית", category: "dairy", cost: 45, servings: 6, leftoverLunches: 2, ketoOption: "Cauliflower crust separate", prepTime: "30 min", ingredients: ["Frozen dough (15.30)", "Tomato sauce (5.50)", "Cheese 400g (24)", "Toppings (8)"] },
+      { id: 16, name: "Cheese Burekas + Salad", nameHe: "בורקס גבינה", category: "dairy", cost: 35, servings: 5, leftoverLunches: 1, ketoOption: "N/A - dairy", prepTime: "20 min", ingredients: ["Cheese burekas (14.10)", "Salad veggies (12)", "Yogurt (7.80)"] },
+      { id: 17, name: "Pasta Cream Sauce", nameHe: "פסטה שמנת", category: "dairy", cost: 38, servings: 5, leftoverLunches: 2, ketoOption: "N/A - dairy", prepTime: "20 min", ingredients: ["Pasta 500g (10.20)", "Cream (12)", "Mushrooms (12)", "Cheese (8)", "Garlic (3)"] },
+      { id: 18, name: "Shakshuka + Bread", nameHe: "שקשוקה + לחם", category: "quick", cost: 28, servings: 4, leftoverLunches: 0, ketoOption: "N/A - eggs & tomato", prepTime: "15 min", ingredients: ["Eggs x12 (12)", "Tomato sauce (5.50)", "Bread (8.30)", "Spices (3)"] },
+      { id: 19, name: "Falafel + Pita", nameHe: "פלאפל בפיתה", category: "quick", cost: 35, servings: 5, leftoverLunches: 1, ketoOption: "Falafel + salad only", prepTime: "15 min", ingredients: ["Frozen falafel (11.90)", "Pitas (7)", "Hummus (7)", "Salads (10)"] },
+      { id: 20, name: "Tortilla Wraps", nameHe: "טורטיות", category: "quick", cost: 40, servings: 5, leftoverLunches: 0, ketoOption: "Lettuce wraps", prepTime: "10 min", ingredients: ["Tortillas (5.80)", "Deli turkey (15)", "Cheese (12)", "Veggies (8)"] },
+      { id: 21, name: "Soup & Sandwich", nameHe: "מרק וסנדוויץ׳", category: "quick", cost: 32, servings: 5, leftoverLunches: 1, ketoOption: "Soup + protein only", prepTime: "10 min", ingredients: ["Canned soup (12)", "Bread (8.30)", "Deli turkey (15)", "Cheese (8)"] },
+    ];
+
+    const shabbosMeals = {
+      fridayNight: { name: "Friday Night", cost: 85, includes: ["Challah", "Salmon", "Chicken", "Rice", "Salads"], ketoOption: "Salmon + chicken + salads" },
+      shabbosLunch: { name: "Shabbos Lunch", cost: 55, includes: ["Challah", "Cholent", "Kugel", "Salads"], ketoOption: "Keto cholent" },
+      seudahShlishit: { name: "Seudah Shlishit", cost: 25, includes: ["Bread", "Salads", "Dips"], ketoOption: "Salads + olives" }
+    };
+
+    const fixedCosts = {
+      breakfast: { name: "Breakfast (7d)", cost: 105, details: "Yogurt, bread, fruit" },
+      schoolLunch: { name: "School Lunch", cost: 75, details: "Pita, turkey, fruit" },
+      formula: { name: "Formula", cost: 120, details: "Shiloh" },
+      pantry: { name: "Pantry", cost: 35, details: "Oil, spices" },
+      eliaKeto: { name: "Elia Keto", cost: 45, details: "Avocado, olives, coconut" }
+    };
+
+    const categoryColors = {
+      chicken: { bg: "#FFF3E0", border: "#FF9800", icon: "🍗" },
+      meat: { bg: "#FFEBEE", border: "#F44336", icon: "🥩" },
+      fish: { bg: "#E3F2FD", border: "#2196F3", icon: "🐟" },
+      dairy: { bg: "#F3E5F5", border: "#9C27B0", icon: "🧀" },
+      quick: { bg: "#E8F5E9", border: "#4CAF50", icon: "⚡" },
+    };
+
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu"];
+    const STORAGE_KEY = "kolMealPlan";
+
+    function MealPlanner() {
+      const [selectedMeals, setSelectedMeals] = useState(new Set());
+      const [showIngredients, setShowIngredients] = useState(null);
+      const [filter, setFilter] = useState("all");
+      const [showExport, setShowExport] = useState(false);
+      const [assignedDays, setAssignedDays] = useState({});
+      const [includeShabbos, setIncludeShabbos] = useState({ fridayNight: true, shabbosLunch: true, seudahShlishit: true });
+      const [toast, setToast] = useState(null);
+
+      // Load from localStorage
+      useEffect(() => {
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) {
+            const data = JSON.parse(saved);
+            if (data.selectedMeals) setSelectedMeals(new Set(data.selectedMeals));
+            if (data.assignedDays) setAssignedDays(data.assignedDays);
+            if (data.includeShabbos) setIncludeShabbos(data.includeShabbos);
+          }
+        } catch (e) { console.log('No saved data'); }
+      }, []);
+
+      // Save to localStorage
+      useEffect(() => {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            selectedMeals: Array.from(selectedMeals),
+            assignedDays,
+            includeShabbos
+          }));
+        } catch (e) { console.log('Save failed'); }
+      }, [selectedMeals, assignedDays, includeShabbos]);
+
+      const shabbosTotal = Object.entries(shabbosMeals).reduce((sum, [k, m]) => includeShabbos[k] ? sum + m.cost : sum, 0);
+      const mealsTotal = Array.from(selectedMeals).reduce((sum, id) => sum + (meals.find(m => m.id === id)?.cost || 0), 0);
+      const fixedTotal = Object.values(fixedCosts).reduce((sum, c) => sum + c.cost, 0);
+      const weeklyTotal = shabbosTotal + mealsTotal + fixedTotal;
+      const totalLeftovers = Array.from(selectedMeals).reduce((sum, id) => sum + (meals.find(m => m.id === id)?.leftoverLunches || 0), 0);
+      
+      const budgetMin = 650, budgetMax = 800;
+      const isInBudget = weeklyTotal >= budgetMin && weeklyTotal <= budgetMax;
+      const isOverBudget = weeklyTotal > budgetMax;
+
+      const toggleMeal = (id) => {
+        setSelectedMeals(prev => {
+          const next = new Set(prev);
+          next.has(id) ? next.delete(id) : next.add(id);
+          return next;
+        });
+      };
+
+      const selectedMealsList = useMemo(() => Array.from(selectedMeals).map(id => meals.find(m => m.id === id)).filter(Boolean), [selectedMeals]);
+      const mealCounts = useMemo(() => {
+        const c = {}; selectedMealsList.forEach(m => c[m.category] = (c[m.category] || 0) + 1); return c;
+      }, [selectedMealsList]);
+
+      const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2000); };
+
+      const generateText = (type) => {
+        const date = new Date().toLocaleDateString();
+        if (type === 'plan') {
+          let t = `🍽️ KOL FAMILY MEAL PLAN\n${date}\n${'═'.repeat(35)}\n\n`;
+          t += `💰 TOTAL: ₪${weeklyTotal}\n`;
+          t += `Breakfast: ₪${fixedCosts.breakfast.cost} | Shabbos: ₪${shabbosTotal} | Dinners: ₪${mealsTotal}\n`;
+          t += `School: ₪${fixedCosts.schoolLunch.cost} | Fixed: ₪${fixedCosts.formula.cost + fixedCosts.pantry.cost + fixedCosts.eliaKeto.cost}\n\n`;
+          t += `📅 DINNERS\n${'─'.repeat(25)}\n`;
+          selectedMealsList.forEach(m => {
+            const d = assignedDays[m.id];
+            t += `${d ? d+': ' : '• '}${m.name} (₪${m.cost}) 🥡${m.leftoverLunches}\n`;
+            if (!m.ketoOption.includes("N/A")) t += `  Elia: ${m.ketoOption}\n`;
+          });
+          t += `\n✨ SHABBOS\n`;
+          Object.entries(shabbosMeals).forEach(([k,m]) => { if(includeShabbos[k]) t += `${m.name}: ₪${m.cost}\n`; });
+          t += `\n🥡 Leftover lunches: ${totalLeftovers}\n`;
+          return t;
+        } else {
+          let t = `🛒 SHOPPING LIST\n${date}\n${'═'.repeat(35)}\n\n`;
+          t += `📌 WEEKLY BASICS\n`;
+          Object.values(fixedCosts).forEach(c => t += `☐ ${c.name}: ${c.details}\n`);
+          t += `\n✨ SHABBOS\n`;
+          Object.entries(shabbosMeals).forEach(([k,m]) => { if(includeShabbos[k]) t += `☐ ${m.name}: ${m.includes.join(', ')}\n`; });
+          t += `\n🍽️ DINNERS\n`;
+          selectedMealsList.forEach(m => { t += `\n${m.name}:\n`; m.ingredients.forEach(i => t += `☐ ${i}\n`); });
+          t += `\n${'═'.repeat(35)}\nTOTAL: ₪${weeklyTotal}`;
+          return t;
+        }
+      };
+
+      const copyText = async (text) => {
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(text);
+            showToast('✅ Copied!');
+          } else {
+            const ta = document.createElement('textarea');
+            ta.value = text; ta.style.cssText = 'position:fixed;opacity:0';
+            document.body.appendChild(ta); ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            showToast('✅ Copied!');
+          }
+        } catch (e) {
+          showToast('❌ Copy failed');
+        }
+      };
+
+      const download = (type) => {
+        if (type === 'csv') {
+          let csv = "Type,Item,Day,Cost,Notes\n";
+          Object.entries(fixedCosts).forEach(([k,c]) => csv += `Fixed,${c.name},,${c.cost},"${c.details}"\n`);
+          Object.entries(shabbosMeals).forEach(([k,m]) => { if(includeShabbos[k]) csv += `Shabbos,${m.name},,${m.cost},"${m.includes.join(', ')}"\n`; });
+          selectedMealsList.forEach(m => csv += `Dinner,${m.name},${assignedDays[m.id]||''},${m.cost},"Leftovers: ${m.leftoverLunches}"\n`);
+          csv += `\nTOTAL,,,${weeklyTotal},`;
+          const blob = new Blob([csv], {type:'text/csv'});
+          const a = document.createElement('a'); 
+          a.href = URL.createObjectURL(blob); 
+          a.download = `meal-plan-${new Date().toISOString().split('T')[0]}.csv`; 
+          a.click();
+          showToast('✅ CSV downloaded!');
+        } else {
+          const content = generateText('plan') + '\n\n' + generateText('list');
+          const w = window.open('','_blank');
+          w.document.write(`<html><head><title>Meal Plan</title><style>body{font-family:monospace;white-space:pre-wrap;padding:20px;font-size:12px;}</style></head><body>${content}</body></html>`);
+          w.document.close(); 
+          w.print();
+        }
+      };
+
+      const clearAll = () => {
+        if (confirm('Clear all selections?')) {
+          setSelectedMeals(new Set());
+          setAssignedDays({});
+          showToast('🗑️ Cleared!');
+        }
+      };
+
+      const filteredMeals = filter === "all" ? meals : meals.filter(m => m.category === filter);
+
+      return (
+        <div className="p-3 bg-gray-100 min-h-screen max-w-lg mx-auto">
+          {/* Toast */}
+          {toast && (
+            <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm">
+              {toast}
+            </div>
+          )}
+
+          {/* Header */}
+          <div className="text-center mb-3">
+            <h1 className="text-xl font-bold text-teal-800">🍽️ Kol Family Meals</h1>
+            <p className="text-gray-500 text-xs">Tap meals to select • Data saves automatically</p>
+          </div>
+
+          {/* Budget */}
+          <div className={`rounded-xl p-3 mb-3 border-2 ${isInBudget ? 'bg-green-100 border-green-500' : isOverBudget ? 'bg-red-100 border-red-500' : 'bg-yellow-100 border-yellow-500'}`}>
+            <div className="flex justify-between items-center mb-1">
+              <span className="font-bold">Weekly Total:</span>
+              <span className={`font-bold text-2xl ${isInBudget ? 'text-green-700' : isOverBudget ? 'text-red-700' : 'text-yellow-700'}`}>₪{weeklyTotal}</span>
+            </div>
+            <div className="bg-gray-300 rounded-full h-3 overflow-hidden mb-2">
+              <div className={`h-full transition-all duration-300 ${isInBudget ? 'bg-green-500' : isOverBudget ? 'bg-red-500' : 'bg-yellow-500'}`} style={{ width: `${Math.min((weeklyTotal / budgetMax) * 100, 100)}%` }} />
+            </div>
+            <div className="text-xs bg-white/50 rounded p-2 space-y-0.5">
+              <div className="flex justify-between"><span>🍳 Breakfast:</span><span>₪{fixedCosts.breakfast.cost}</span></div>
+              <div className="flex justify-between"><span>✨ Shabbos:</span><span>₪{shabbosTotal}</span></div>
+              <div className="flex justify-between"><span>🍽️ Dinners ({selectedMeals.size}):</span><span>₪{mealsTotal}</span></div>
+              <div className="flex justify-between"><span>🎒 School + Fixed:</span><span>₪{fixedCosts.schoolLunch.cost + fixedCosts.formula.cost + fixedCosts.pantry.cost + fixedCosts.eliaKeto.cost}</span></div>
+              <div className="flex justify-between font-bold border-t pt-1 text-teal-700"><span>🥡 Leftover lunches:</span><span>{totalLeftovers}</span></div>
+            </div>
+            <div className="flex gap-2 mt-2">
+              {selectedMeals.size > 0 && (
+                <>
+                  <button onClick={() => setShowExport(!showExport)} className="flex-1 py-2 bg-teal-600 text-white rounded-lg font-bold text-sm">
+                    {showExport ? "✕ Close" : "📤 Export"}
+                  </button>
+                  <button onClick={clearAll} className="px-3 py-2 bg-gray-300 text-gray-700 rounded-lg text-sm">🗑️</button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Export Panel */}
+          {showExport && (
+            <div className="bg-white rounded-xl p-3 mb-3 border-2 border-teal-500 shadow-lg">
+              <h3 className="font-bold text-teal-700 text-sm mb-2">📤 Export Your Plan</h3>
+              <div className="space-y-1 max-h-32 overflow-y-auto no-scrollbar mb-3">
+                {selectedMealsList.map(m => (
+                  <div key={m.id} className="flex items-center gap-1 text-xs bg-gray-50 p-1.5 rounded">
+                    <span className="flex-1 truncate">{categoryColors[m.category].icon} {m.name}</span>
+                    <select 
+                      value={assignedDays[m.id] || ""} 
+                      onChange={e => setAssignedDays(p => ({...p, [m.id]: e.target.value}))} 
+                      className="text-xs border rounded p-1 bg-white"
+                    >
+                      <option value="">Day</option>
+                      {days.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => copyText(generateText('plan'))} className="py-2 rounded-lg font-semibold text-sm bg-blue-100 text-blue-700 active:bg-blue-200">📋 Copy Plan</button>
+                <button onClick={() => copyText(generateText('list'))} className="py-2 rounded-lg font-semibold text-sm bg-orange-100 text-orange-700 active:bg-orange-200">🛒 Copy List</button>
+                <button onClick={() => download('csv')} className="py-2 rounded-lg font-semibold text-sm bg-green-100 text-green-700 active:bg-green-200">📊 CSV File</button>
+                <button onClick={() => download('pdf')} className="py-2 rounded-lg font-semibold text-sm bg-purple-100 text-purple-700 active:bg-purple-200">📄 Print/PDF</button>
+              </div>
+            </div>
+          )}
+
+          {/* Shabbos */}
+          <div className="bg-yellow-50 rounded-xl p-2 mb-3 border border-yellow-300">
+            <div className="flex justify-between items-center mb-1">
+              <h3 className="font-bold text-sm">✨ Shabbos</h3>
+              <span className="font-bold text-sm">₪{shabbosTotal}</span>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {Object.entries(shabbosMeals).map(([k, m]) => (
+                <label key={k} className="flex items-center gap-1 text-xs cursor-pointer bg-white px-2 py-1 rounded-full border">
+                  <input 
+                    type="checkbox" 
+                    checked={includeShabbos[k]} 
+                    onChange={() => setIncludeShabbos(p => ({...p, [k]: !p[k]}))} 
+                    className="w-3 h-3"
+                  />
+                  <span>{m.name}</span>
+                  <span className="text-gray-500">₪{m.cost}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Category filters */}
+          <div className="flex gap-1 mb-3 overflow-x-auto no-scrollbar">
+            <button onClick={() => setFilter("all")} className={`px-3 py-1.5 rounded-full text-xs whitespace-nowrap ${filter === "all" ? 'bg-teal-700 text-white' : 'bg-white border'}`}>All</button>
+            {Object.entries(categoryColors).map(([k, c]) => (
+              <button 
+                key={k} 
+                onClick={() => setFilter(k)} 
+                className={`px-2 py-1.5 rounded-full text-xs whitespace-nowrap flex items-center gap-1 ${filter === k ? 'text-white' : 'bg-white border'}`} 
+                style={filter === k ? {backgroundColor: c.border} : {}}
+              >
+                {c.icon} <span className="font-bold">{mealCounts[k] || 0}</span>
+              </button>
+            ))}
+            <div className="px-2 py-1.5 rounded-full text-xs bg-teal-100 text-teal-700 font-bold whitespace-nowrap">🥡 {totalLeftovers}</div>
+          </div>
+
+          {/* Meal Cards */}
+          <div className="space-y-2">
+            {filteredMeals.map(m => {
+              const sel = selectedMeals.has(m.id);
+              const c = categoryColors[m.category];
+              const day = assignedDays[m.id];
+              return (
+                <div 
+                  key={m.id} 
+                  onClick={() => toggleMeal(m.id)} 
+                  className="rounded-xl p-2.5 cursor-pointer active:scale-[0.98] transition-transform"
+                  style={{backgroundColor: sel ? c.bg : 'white', border: `2px solid ${sel ? c.border : '#e5e7eb'}`}}
+                >
+                  <div className="flex justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-lg">{c.icon}</span>
+                        <span className="font-bold text-sm">{m.name}</span>
+                        {sel && <span style={{color: c.border}} className="text-lg">✓</span>}
+                        {day && <span className="text-xs bg-teal-600 text-white px-1.5 py-0.5 rounded">{day}</span>}
+                      </div>
+                      <div className="text-xs text-gray-500">{m.nameHe}</div>
+                      <div className="flex gap-2 text-xs text-gray-400 mt-0.5 flex-wrap">
+                        <span>⏱️ {m.prepTime}</span>
+                        <span>👥 {m.servings}</span>
+                        <span className="text-teal-600 font-semibold">🥡 {m.leftoverLunches}</span>
+                        {m.freezable && <span>❄️</span>}
+                      </div>
+                    </div>
+                    <div className="font-bold text-teal-700 text-lg">₪{m.cost}</div>
+                  </div>
+                  <div className={`mt-1.5 p-1.5 rounded text-xs ${m.ketoOption.includes("N/A") ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+                    <strong>Elia:</strong> {m.ketoOption}
+                  </div>
+                  <div 
+                    onClick={e => { e.stopPropagation(); setShowIngredients(showIngredients === m.id ? null : m.id); }} 
+                    className="mt-1 text-xs text-teal-600"
+                  >
+                    {showIngredients === m.id ? "▼ Hide ingredients" : "▶ Show ingredients"}
+                  </div>
+                  {showIngredients === m.id && (
+                    <div className="mt-1 p-2 bg-gray-100 rounded text-xs">
+                      {m.ingredients.map((ing, i) => <div key={i}>• {ing}</div>)}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Fixed costs */}
+          <div className="mt-4 bg-white rounded-xl p-3">
+            <h3 className="font-bold text-teal-700 text-sm mb-2">📌 Fixed Weekly Costs</h3>
+            {Object.values(fixedCosts).map((c, i) => (
+              <div key={i} className="flex justify-between text-xs py-1 border-b border-gray-100 last:border-0">
+                <span>{c.name} <span className="text-gray-400">({c.details})</span></span>
+                <span className="font-bold">₪{c.cost}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Tips */}
+          <div className="mt-3 bg-blue-50 rounded-xl p-3 mb-6">
+            <p className="text-xs text-gray-700">
+              💡 <strong>Tips:</strong> Pick 5-7 dinners for Sun-Thu. Aim for 🥡5+ leftover lunches. 
+              Green = keto-friendly for Elia. Your selections save automatically!
+            </p>
+          </div>
+
+          {/* Install hint */}
+          <div className="text-center text-xs text-gray-400 pb-4">
+            📱 Add to Home Screen for app-like experience
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<MealPlanner />);
+  </script>
+</body>
+</html>
