@@ -5,32 +5,60 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Zafrany Meals">
+  <meta name="apple-mobile-web-app-title" content="Budget Assistant">
   <meta name="theme-color" content="#0d9488">
-  <title>Zafrany Family Meal Planner</title>
+  <title>Budget Assistant - Zafrany Family</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; min-height: 100vh; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; min-height: 100vh; padding-bottom: 70px; }
     .container { max-width: 500px; margin: 0 auto; padding: 12px; }
     .header { text-align: center; margin-bottom: 12px; }
     .header h1 { font-size: 20px; color: #115e59; }
     .header p { font-size: 11px; color: #6b7280; }
     
-    .budget-box { border-radius: 12px; padding: 12px; margin-bottom: 12px; border: 2px solid; }
-    .budget-box.green { background: #dcfce7; border-color: #22c55e; }
-    .budget-box.red { background: #fee2e2; border-color: #ef4444; }
-    .budget-box.yellow { background: #fef9c3; border-color: #eab308; }
+    /* Bottom Tab Navigation */
+    .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-around; padding: 8px 0 max(8px, env(safe-area-inset-bottom)); z-index: 1000; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+    .tab-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 12px; border: none; background: transparent; cursor: pointer; color: #9ca3af; font-size: 10px; font-weight: 600; transition: all 0.2s; }
+    .tab-btn .tab-icon { font-size: 20px; }
+    .tab-btn.active { color: #0d9488; }
+    .tab-btn.active .tab-icon { transform: scale(1.1); }
+    
+    /* Tab Content */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    /* Compact Budget Header */
+    .budget-header-compact { background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); color: white; padding: 12px; border-radius: 12px; margin-bottom: 12px; }
+    .budget-main { display: flex; justify-content: space-between; align-items: center; }
+    .budget-amount { font-size: 28px; font-weight: bold; }
+    .budget-label { font-size: 11px; opacity: 0.9; }
+    .budget-target { text-align: right; }
+    .budget-target-text { font-size: 11px; opacity: 0.9; }
+    .budget-status { font-size: 12px; font-weight: bold; }
+    .budget-status.over { color: #fca5a5; }
+    .budget-status.under { color: #86efac; }
+    .budget-mini-bar { background: rgba(255,255,255,0.3); border-radius: 4px; height: 6px; margin-top: 8px; overflow: hidden; }
+    .budget-mini-fill { height: 100%; background: white; transition: width 0.3s; }
+    .budget-mini-fill.over { background: #fca5a5; }
+    
+    .budget-expand-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; margin-top: 8px; width: 100%; }
+    .budget-details { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); display: none; }
+    .budget-details.show { display: block; }
+    .budget-detail-row { display: flex; justify-content: space-between; font-size: 12px; padding: 3px 0; opacity: 0.9; }
+    
+    .quick-stats { display: flex; gap: 8px; margin-bottom: 12px; }
+    .quick-stat { flex: 1; background: white; border-radius: 10px; padding: 10px; text-align: center; border: 1px solid #e5e7eb; }
+    .quick-stat-value { font-size: 18px; font-weight: bold; color: #0d9488; }
+    .quick-stat-label { font-size: 10px; color: #6b7280; }
+    
+    /* Old CSS removed - using compact budget header now */
     .budget-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .budget-total { font-size: 24px; font-weight: bold; }
     .budget-total.green { color: #15803d; }
     .budget-total.red { color: #dc2626; }
     .budget-total.yellow { color: #a16207; }
     
-    .progress-bar { background: #d1d5db; border-radius: 10px; height: 12px; overflow: hidden; margin-bottom: 8px; }
-    .progress-fill { height: 100%; transition: width 0.3s; }
-    .progress-fill.green { background: #22c55e; }
-    .progress-fill.red { background: #ef4444; }
-    .progress-fill.yellow { background: #eab308; }
+    /* Old progress bar removed - using mini bar now */
     
     .budget-breakdown { background: rgba(255,255,255,0.6); border-radius: 8px; padding: 8px; font-size: 12px; }
     .budget-row { display: flex; justify-content: space-between; padding: 2px 0; }
@@ -41,18 +69,19 @@
     .btn-primary { background: #0d9488; color: white; }
     .btn-secondary { background: #d1d5db; color: #374151; flex: none; padding: 10px 14px; }
     
-    .export-panel { background: white; border-radius: 12px; padding: 12px; margin-bottom: 12px; border: 2px solid #0d9488; }
-    .export-panel h3 { font-size: 14px; color: #0d9488; margin-bottom: 8px; }
+    /* Old export panel removed - using tab now */
     .export-days { max-height: 120px; overflow-y: auto; margin-bottom: 10px; }
     .export-day-row { display: flex; align-items: center; gap: 6px; font-size: 12px; background: #f9fafb; padding: 6px; border-radius: 6px; margin-bottom: 4px; }
     .export-day-row span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .export-day-row select { font-size: 11px; padding: 4px; border: 1px solid #d1d5db; border-radius: 4px; }
     .export-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .export-btn { padding: 10px; border: none; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; }
+    .export-btn { padding: 12px; border: none; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; }
     .export-btn.blue { background: #dbeafe; color: #1d4ed8; }
     .export-btn.orange { background: #ffedd5; color: #c2410c; }
     .export-btn.green { background: #dcfce7; color: #15803d; }
     .export-btn.purple { background: #f3e8ff; color: #7c3aed; }
+    
+    .export-section { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
     
     .weekly-section { border-radius: 12px; padding: 10px; margin-bottom: 10px; border: 1px solid; }
     .weekly-section.breakfast { background: #fef3c7; border-color: #f59e0b; }
@@ -119,6 +148,26 @@
     .tips { background: #eff6ff; border-radius: 12px; padding: 12px; margin-top: 12px; font-size: 12px; color: #374151; }
     .footer { text-align: center; font-size: 11px; color: #9ca3af; padding: 16px 0; }
     
+    /* Cost Estimator Styles */
+    .estimator-input { width: 100%; min-height: 200px; padding: 12px; border: 2px solid #d1d5db; border-radius: 8px; font-family: monospace; font-size: 13px; resize: vertical; }
+    .estimator-input:focus { outline: none; border-color: #0d9488; }
+    .estimator-btn { width: 100%; padding: 12px; background: #0d9488; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; margin-top: 10px; }
+    .estimator-btn:active { background: #0f766e; }
+    .estimator-results { margin-top: 16px; }
+    .estimator-section { background: white; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+    .estimator-section-title { font-weight: bold; font-size: 14px; color: #374151; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid #e5e7eb; }
+    .estimator-item { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid #f3f4f6; }
+    .estimator-item:last-child { border-bottom: none; }
+    .estimator-item-name { flex: 1; }
+    .estimator-item-qty { color: #6b7280; font-size: 12px; margin-left: 8px; }
+    .estimator-item-cost { font-weight: 600; color: #0d9488; }
+    .estimator-total { background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); color: white; padding: 16px; border-radius: 10px; margin-top: 12px; }
+    .estimator-total-amount { font-size: 32px; font-weight: bold; }
+    .estimator-total-label { font-size: 13px; opacity: 0.9; margin-bottom: 4px; }
+    .estimator-unmatched { background: #fef3c7; border: 2px solid #fbbf24; border-radius: 10px; padding: 12px; margin-top: 12px; }
+    .estimator-unmatched-title { font-weight: bold; font-size: 13px; color: #92400e; margin-bottom: 6px; }
+    .estimator-unmatched-item { font-size: 12px; color: #78350f; padding: 3px 0; }
+    
     .toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 10px 20px; border-radius: 8px; font-size: 13px; z-index: 1000; display: none; }
     .toast.show { display: block; }
     
@@ -132,103 +181,167 @@
   <div class="toast" id="toast"></div>
   
   <div class="container">
-    <div class="header">
-      <h1>🍽️ Zafrany Family Meals</h1>
-      <p>Tap items to select • Saves automatically</p>
-    </div>
-    
-    <div class="budget-box" id="budgetBox">
-      <div class="budget-header">
-        <span style="font-weight:bold">Weekly Total:</span>
-        <span class="budget-total" id="budgetTotal">₪0</span>
+    <!-- Compact Budget Header - Always Visible -->
+    <div class="budget-header-compact" id="budgetCompact">
+      <div class="budget-main">
+        <div>
+          <div class="budget-amount" id="budgetAmountCompact">₪0</div>
+          <div class="budget-label">Weekly Total</div>
+        </div>
+        <div class="budget-target">
+          <div class="budget-target-text">Target: ₪550-750</div>
+          <div class="budget-status" id="budgetStatusCompact"></div>
+        </div>
       </div>
-      <div class="progress-bar">
-        <div class="progress-fill" id="progressFill"></div>
+      <div class="budget-mini-bar">
+        <div class="budget-mini-fill" id="budgetMiniFill"></div>
       </div>
-      <div class="budget-breakdown">
-        <div class="budget-row"><span>🍳 Breakfast:</span><span id="breakfastCost">₪0</span></div>
-        <div class="budget-row"><span>🎒 School Lunch:</span><span id="schoolCost">₪0</span></div>
-        <div class="budget-row"><span>🧂 Pantry:</span><span id="pantryCost">₪0</span></div>
-        <div class="budget-row"><span>✨ Shabbos:</span><span id="shabbosCost">₪0</span></div>
-        <div class="budget-row"><span>🍽️ Dinners (<span id="dinnerCount">0</span>):</span><span id="dinnersCost">₪0</span></div>
-        <div class="budget-row"><span>🥑 Elia (<span id="eliaCount">0</span>):</span><span id="eliaCost">₪0</span></div>
-        <div class="budget-row total"><span>🥡 Leftover lunches:</span><span id="leftoverCount">0</span></div>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-primary" id="exportBtn">📤 Export</button>
-        <button class="btn btn-secondary" id="clearBtn">🗑️</button>
-      </div>
-    </div>
-    
-    <div class="export-panel hidden" id="exportPanel">
-      <h3>📤 Export & Share</h3>
-      <div class="export-days" id="exportDays"></div>
-      <div class="export-btns">
-        <button class="export-btn blue" id="copyPlanBtn">📋 Copy Plan</button>
-        <button class="export-btn orange" id="copyListBtn">🛒 Copy List</button>
-        <button class="export-btn green" id="downloadCSVBtn">📊 CSV File</button>
-        <button class="export-btn purple" id="printBtn">📄 View/Print</button>
-        <button class="export-btn" id="shareBtn" style="background:#fef3c7;color:#92400e;grid-column:span 2;">📤 Share (WhatsApp/Notes)</button>
+      <button class="budget-expand-btn" id="budgetExpandBtn">▼ Details</button>
+      <div class="budget-details" id="budgetDetails">
+        <div class="budget-detail-row"><span>🍳 Breakfast</span><span id="breakfastCost">₪0</span></div>
+        <div class="budget-detail-row"><span>🎒 School</span><span id="schoolCost">₪0</span></div>
+        <div class="budget-detail-row"><span>🧂 Pantry</span><span id="pantryCost">₪0</span></div>
+        <div class="budget-detail-row"><span>✨ Shabbos</span><span id="shabbosCost">₪0</span></div>
+        <div class="budget-detail-row"><span>🍽️ Dinners (<span id="dinnerCount">0</span>)</span><span id="dinnersCost">₪0</span></div>
+        <div class="budget-detail-row"><span>🥑 Elia (<span id="eliaCount">0</span>)</span><span id="eliaCost">₪0</span></div>
+        <div class="budget-detail-row" style="border-top:1px solid rgba(255,255,255,0.3);padding-top:6px;margin-top:4px;">
+          <span>🥡 Leftover Lunches</span><span id="leftoverCount">0</span>
+        </div>
       </div>
     </div>
     
-    <!-- Breakfast Section -->
-    <div class="weekly-section breakfast">
-      <div class="section-header-row">
-        <h3>🍳 Breakfast (7 days)</h3>
-        <span class="cost" id="breakfastTotal">₪0</span>
+    <!-- TAB 1: Basics -->
+    <div class="tab-content active" id="tab-basics">
+      <div class="weekly-section breakfast">
+        <div class="section-header-row">
+          <h3>🍳 Breakfast (7 days)</h3>
+          <span class="cost" id="breakfastTotal">₪0</span>
+        </div>
+        <div class="weekly-items" id="breakfastItems"></div>
       </div>
-      <div class="weekly-items" id="breakfastItems"></div>
-    </div>
-    
-    <!-- School Lunch Section -->
-    <div class="weekly-section school">
-      <div class="section-header-row">
-        <h3>🎒 School Lunch (Yakira & Yedidya)</h3>
-        <span class="cost" id="schoolTotal">₪0</span>
+      
+      <div class="weekly-section school">
+        <div class="section-header-row">
+          <h3>🎒 School Lunch</h3>
+          <span class="cost" id="schoolTotal">₪0</span>
+        </div>
+        <div class="weekly-items" id="schoolItems"></div>
       </div>
-      <div class="weekly-items" id="schoolItems"></div>
-    </div>
-    
-    <!-- Pantry Section -->
-    <div class="weekly-section pantry">
-      <div class="section-header-row">
-        <h3>🧂 Pantry Basics</h3>
-        <span class="cost" id="pantryTotal">₪0</span>
+      
+      <div class="weekly-section pantry">
+        <div class="section-header-row">
+          <h3>🧂 Pantry Basics</h3>
+          <span class="cost" id="pantryTotal">₪0</span>
+        </div>
+        <div class="weekly-items" id="pantryItems"></div>
       </div>
-      <div class="weekly-items" id="pantryItems"></div>
     </div>
     
-    <!-- Shabbos Section -->
-    <div class="weekly-section shabbos">
-      <div class="section-header-row">
-        <h3>✨ Shabbos</h3>
-        <span class="cost" id="shabbosTotal">₪0</span>
+    <!-- TAB 2: Shabbos -->
+    <div class="tab-content" id="tab-shabbos">
+      <div class="weekly-section shabbos" style="min-height:300px;">
+        <div class="section-header-row">
+          <h3>✨ Shabbos Meals</h3>
+          <span class="cost" id="shabbosTotal">₪0</span>
+        </div>
+        <div class="weekly-items" id="shabbosItems"></div>
       </div>
-      <div class="weekly-items" id="shabbosItems"></div>
     </div>
     
-    <!-- Elia's Proteins Section -->
-    <div class="elia-section">
-      <h3>🥑 Elia's Keto Add-ons</h3>
-      <div class="elia-proteins" id="eliaProteins"></div>
-      <div class="elia-note">Use +/− to set quantities for dairy/non-keto nights</div>
+    <!-- TAB 3: Dinners -->
+    <div class="tab-content" id="tab-dinners">
+      <div class="section-header">
+        <h3>🍽️ Family Dinners</h3>
+        <span class="badge" id="dinnerBadge">0 selected</span>
+      </div>
+      
+      <div class="filters" id="filters"></div>
+      <div class="meals-list" id="mealsList"></div>
+      
+      <div class="elia-section" style="margin-top:16px;">
+        <h3>🥑 Elia's Keto Add-ons</h3>
+        <div class="elia-proteins" id="eliaProteins"></div>
+        <div class="elia-note">Use +/− for dairy/non-keto nights</div>
+      </div>
     </div>
     
-    <div class="section-header">
-      <h3>🍽️ Family Dinners</h3>
-      <span class="badge" id="dinnerBadge">0 selected</span>
+    <!-- TAB 4: Export -->
+    <div class="tab-content" id="tab-export">
+      <div style="background:white;border-radius:12px;padding:16px;margin-bottom:12px;">
+        <div class="export-summary" id="exportSummary" style="max-height:400px;overflow-y:auto;"></div>
+      </div>
+      
+      <div class="export-section">
+        <h3 style="font-size:14px;color:#374151;margin-bottom:12px;">📤 Share Your Plan</h3>
+        <div class="export-btns">
+          <button class="export-btn blue" id="copyPlanBtn">📋 Copy Plan</button>
+          <button class="export-btn orange" id="copyListBtn">🛒 Copy List</button>
+          <button class="export-btn green" id="downloadCSVBtn">📊 CSV File</button>
+          <button class="export-btn purple" id="printBtn">📄 View/Print</button>
+          <button class="export-btn" id="shareBtn" style="background:#fef3c7;color:#92400e;grid-column:span 2;">📤 Share (WhatsApp/Notes)</button>
+        </div>
+      </div>
+      
+      <div style="background:white;border-radius:12px;padding:16px;margin-top:12px;">
+        <div style="font-weight:bold;font-size:13px;margin-bottom:8px;">🗑️ Start Over</div>
+        <button class="btn btn-secondary" id="clearBtn" style="width:100%;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;">Clear All Selections</button>
+      </div>
     </div>
     
-    <div class="filters" id="filters"></div>
-    
-    <div class="meals-list" id="mealsList"></div>
-    
-    <div class="tips">
-      💡 <strong>Tips:</strong> Tap meals to select, then assign days (Sun-Thu). Add Elia meals for dairy nights. Aim for 🥡5+ leftover lunches. Uncheck items you already have!
+    <!-- TAB 5: Cost Estimator -->
+    <div class="tab-content" id="tab-estimator">
+      <div style="background:white;border-radius:12px;padding:16px;margin-bottom:12px;">
+        <h3 style="font-size:16px;color:#374151;margin-bottom:8px;">💰 Cost Estimator</h3>
+        <p style="font-size:12px;color:#6b7280;margin-bottom:12px;">Paste your shopping list below. We'll estimate costs from Rami Levy prices.</p>
+        
+        <textarea class="estimator-input" id="estimatorInput" placeholder="Example:
+Yogurt
+Bread 2 loaves
+Chicken 1kg
+Eggs
+Challah
+Rice
+Tomatoes"></textarea>
+        
+        <button class="estimator-btn" id="estimateBtn">Calculate Cost</button>
+      </div>
+      
+      <div id="estimatorResults" class="estimator-results"></div>
+      
+      <div style="background:#eff6ff;border-radius:10px;padding:12px;margin-top:12px;">
+        <div style="font-size:11px;color:#374151;"><strong>💡 How it works:</strong></div>
+        <ul style="font-size:11px;color:#6b7280;margin-top:6px;padding-left:20px;">
+          <li>Paste any shopping list (one item per line)</li>
+          <li>We'll match items to our Rami Levy database</li>
+          <li>Made items (challah, kugel) show ingredient breakdown</li>
+          <li>Quantities default to 1 week supply unless specified</li>
+        </ul>
+      </div>
     </div>
-    
-    <div class="footer">📱 Add to Home Screen for app-like experience</div>
+  </div>
+  
+  <!-- Bottom Tab Bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="basics">
+      <span class="tab-icon">🛒</span>
+      <span>Basics</span>
+    </button>
+    <button class="tab-btn" data-tab="shabbos">
+      <span class="tab-icon">✨</span>
+      <span>Shabbos</span>
+    </button>
+    <button class="tab-btn" data-tab="dinners">
+      <span class="tab-icon">🍽️</span>
+      <span>Dinners</span>
+    </button>
+    <button class="tab-btn" data-tab="estimator">
+      <span class="tab-icon">💰</span>
+      <span>Estimate</span>
+    </button>
+    <button class="tab-btn" data-tab="export">
+      <span class="tab-icon">📤</span>
+      <span>Export</span>
+    </button>
   </div>
 
   <script>
@@ -332,7 +445,7 @@
     };
 
     var days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    var STORAGE_KEY = "zafranyMealPlanV5";
+    var STORAGE_KEY = "budgetAssistantV1";
 
     var state = {
       breakfast: ["b1", "b2", "b3", "b4", "b5"],
@@ -433,14 +546,28 @@
       var budgetMin = 550, budgetMax = 750;
       var isInBudget = totals.weeklyTotal >= budgetMin && totals.weeklyTotal <= budgetMax;
       var isOver = totals.weeklyTotal > budgetMax;
-      var color = isInBudget ? "green" : isOver ? "red" : "yellow";
-
-      document.getElementById("budgetBox").className = "budget-box " + color;
-      document.getElementById("budgetTotal").className = "budget-total " + color;
-      document.getElementById("budgetTotal").textContent = "₪" + totals.weeklyTotal;
-      document.getElementById("progressFill").className = "progress-fill " + color;
-      document.getElementById("progressFill").style.width = Math.min((totals.weeklyTotal / budgetMax) * 100, 100) + "%";
-
+      
+      // Update compact budget header
+      document.getElementById("budgetAmountCompact").textContent = "₪" + totals.weeklyTotal;
+      var statusEl = document.getElementById("budgetStatusCompact");
+      var fillEl = document.getElementById("budgetMiniFill");
+      
+      if (isOver) {
+        statusEl.textContent = "Over budget!";
+        statusEl.className = "budget-status over";
+        fillEl.className = "budget-mini-fill over";
+      } else if (isInBudget) {
+        statusEl.textContent = "✓ On target";
+        statusEl.className = "budget-status under";
+        fillEl.className = "budget-mini-fill";
+      } else {
+        statusEl.textContent = "Under target";
+        statusEl.className = "budget-status";
+        fillEl.className = "budget-mini-fill";
+      }
+      fillEl.style.width = Math.min((totals.weeklyTotal / budgetMax) * 100, 100) + "%";
+      
+      // Update detail rows
       document.getElementById("breakfastCost").textContent = "₪" + totals.breakfastTotal;
       document.getElementById("schoolCost").textContent = "₪" + totals.schoolTotal;
       document.getElementById("pantryCost").textContent = "₪" + totals.pantryTotal;
@@ -457,6 +584,118 @@
       document.getElementById("schoolTotal").textContent = "₪" + totals.schoolTotal;
       document.getElementById("pantryTotal").textContent = "₪" + totals.pantryTotal;
       document.getElementById("shabbosTotal").textContent = "₪" + totals.shabbosTotal;
+      
+      // Update export summary
+      renderExportSummary(totals);
+    }
+    
+    function renderExportSummary(totals) {
+      var html = '';
+      
+      // Cart Header
+      html += '<div style="font-weight:bold;font-size:15px;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #e5e7eb;">🛒 Your Cart</div>';
+      
+      // Basics Section
+      html += '<div style="margin-bottom:12px;">';
+      html += '<div style="font-weight:bold;font-size:12px;color:#6b7280;margin-bottom:6px;">WEEKLY BASICS</div>';
+      
+      if (state.breakfast.length > 0) {
+        html += '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;">';
+        html += '<span>🍳 Breakfast (' + state.breakfast.length + ' items)</span>';
+        html += '<span style="font-weight:600;">₪' + totals.breakfastTotal + '</span></div>';
+      }
+      if (state.school.length > 0) {
+        html += '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;">';
+        html += '<span>🎒 School Lunch (' + state.school.length + ' items)</span>';
+        html += '<span style="font-weight:600;">₪' + totals.schoolTotal + '</span></div>';
+      }
+      if (state.pantry.length > 0) {
+        html += '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;">';
+        html += '<span>🧂 Pantry (' + state.pantry.length + ' items)</span>';
+        html += '<span style="font-weight:600;">₪' + totals.pantryTotal + '</span></div>';
+      }
+      html += '</div>';
+      
+      // Shabbos Section
+      if (state.shabbos.length > 0) {
+        html += '<div style="margin-bottom:12px;">';
+        html += '<div style="font-weight:bold;font-size:12px;color:#6b7280;margin-bottom:6px;">SHABBOS</div>';
+        html += '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;">';
+        html += '<span>✨ Shabbos Meals (' + state.shabbos.length + ' items)</span>';
+        html += '<span style="font-weight:600;">₪' + totals.shabbosTotal + '</span></div>';
+        html += '</div>';
+      }
+      
+      // Dinners Section
+      if (state.dinners.length > 0) {
+        html += '<div style="margin-bottom:12px;">';
+        html += '<div style="font-weight:bold;font-size:12px;color:#6b7280;margin-bottom:6px;">DINNERS</div>';
+        state.dinners.forEach(function(id) {
+          var m = meals.find(function(x) { return x.id === id; });
+          if (!m) return;
+          var day = state.assignedDays[id];
+          html += '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;">';
+          html += '<span>' + categories[m.category].icon + ' ' + m.name;
+          if (day) html += ' <span style="background:#0d9488;color:white;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:4px;">' + day + '</span>';
+          html += '</span>';
+          html += '<span style="font-weight:600;">₪' + m.cost + '</span></div>';
+        });
+        html += '</div>';
+      }
+      
+      // Elia Section
+      var eliaItems = [];
+      for (var id in state.eliaQty) {
+        if (state.eliaQty[id] > 0) {
+          var p = eliaProteins.find(function(x) { return x.id === id; });
+          if (p) eliaItems.push({ protein: p, qty: state.eliaQty[id] });
+        }
+      }
+      if (eliaItems.length > 0) {
+        html += '<div style="margin-bottom:12px;">';
+        html += '<div style="font-weight:bold;font-size:12px;color:#6b7280;margin-bottom:6px;">ELIA\'S KETO</div>';
+        eliaItems.forEach(function(item) {
+          html += '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;">';
+          html += '<span>🥑 ' + item.protein.name + ' x' + item.qty + '</span>';
+          html += '<span style="font-weight:600;">₪' + (item.protein.cost * item.qty) + '</span></div>';
+        });
+        html += '</div>';
+      }
+      
+      // Totals
+      html += '<div style="border-top:2px solid #e5e7eb;padding-top:10px;margin-top:8px;">';
+      html += '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:14px;">';
+      html += '<span>Subtotal</span><span style="font-weight:600;">₪' + totals.weeklyTotal + '</span></div>';
+      
+      // Leftover lunches
+      html += '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;color:#059669;">';
+      html += '<span>🥡 Leftover Lunches</span><span style="font-weight:600;">' + totals.leftoverTotal + '</span></div>';
+      
+      // Grand Total
+      html += '<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:18px;font-weight:bold;color:#0d9488;border-top:1px solid #e5e7eb;margin-top:6px;">';
+      html += '<span>TOTAL</span><span>₪' + totals.weeklyTotal + '</span></div>';
+      html += '</div>';
+      
+      // Warnings
+      var assignedCount = Object.keys(state.assignedDays).length;
+      if (state.dinners.length > 0 && assignedCount < state.dinners.length) {
+        html += '<div style="background:#fef3c7;color:#92400e;padding:8px;border-radius:6px;margin-top:10px;font-size:12px;">';
+        html += '⚠️ ' + (state.dinners.length - assignedCount) + ' dinner(s) need day assignment';
+        html += '</div>';
+      }
+      
+      if (totals.weeklyTotal > 750) {
+        html += '<div style="background:#fee2e2;color:#dc2626;padding:8px;border-radius:6px;margin-top:10px;font-size:12px;">';
+        html += '🔴 Over budget by ₪' + (totals.weeklyTotal - 750);
+        html += '</div>';
+      } else if (totals.weeklyTotal >= 550) {
+        html += '<div style="background:#dcfce7;color:#166534;padding:8px;border-radius:6px;margin-top:10px;font-size:12px;">';
+        html += '✅ Within budget (₪550-750)';
+        html += '</div>';
+      }
+      
+      var el = document.getElementById("exportSummary");
+      if (el) el.innerHTML = html;
     }
 
     function renderWeeklySection(items, selected, containerId, stateKey) {
@@ -664,7 +903,6 @@
           renderBudget();
           renderFilters();
           renderMeals();
-          renderExport();
         });
       });
       
@@ -680,8 +918,8 @@
             delete state.assignedDays[mid];
           }
           saveState();
+          renderBudget();
           renderMeals();
-          renderExport();
         });
       });
       
@@ -694,22 +932,6 @@
           renderMeals();
         });
       });
-    }
-
-    function renderExport() {
-      var panel = document.getElementById("exportPanel");
-      panel.className = state.showExport ? "export-panel" : "export-panel hidden";
-      
-      // Show summary of selected meals
-      var html = '<div style="font-size:12px;color:#6b7280;margin-bottom:10px;">';
-      html += '<strong>' + state.dinners.length + ' meals selected</strong>';
-      var assignedCount = Object.keys(state.assignedDays).length;
-      if (assignedCount < state.dinners.length) {
-        html += ' · <span style="color:#f59e0b;">' + (state.dinners.length - assignedCount) + ' need day assignment</span>';
-      }
-      html += '</div>';
-      
-      document.getElementById("exportDays").innerHTML = html;
     }
 
     function getSelectedIngredients(items, selected) {
@@ -1479,6 +1701,155 @@
       }
     }
 
+    // Cost Estimator Function
+    function estimateCost() {
+      var input = document.getElementById("estimatorInput").value.trim();
+      if (!input) {
+        showToast("⚠️ Please enter a shopping list");
+        return;
+      }
+      
+      var lines = input.split("\n").filter(function(line) { return line.trim(); });
+      var matched = [];
+      var unmatched = [];
+      var total = 0;
+      
+      // Build database of all items
+      var database = [];
+      
+      // Add breakfast items
+      breakfastItems.forEach(function(item) {
+        database.push({ name: item.name, cost: item.cost, category: "Breakfast", ingredients: item.ingredients, source: item });
+      });
+      
+      // Add school items
+      schoolItems.forEach(function(item) {
+        database.push({ name: item.name, cost: item.cost, category: "School", ingredients: item.ingredients, source: item });
+      });
+      
+      // Add pantry items
+      pantryItems.forEach(function(item) {
+        database.push({ name: item.name, cost: item.cost, category: "Pantry", ingredients: item.ingredients, source: item });
+      });
+      
+      // Add shabbos items (these might have breakdown)
+      shabbosItems.forEach(function(item) {
+        database.push({ name: item.name, cost: item.cost, category: "Shabbos", ingredients: item.ingredients, source: item, isHomemade: item.name.toLowerCase().includes("homemade") });
+      });
+      
+      // Add elia proteins
+      eliaProteins.forEach(function(item) {
+        database.push({ name: item.name, cost: item.cost, category: "Elia Keto", ingredients: item.ingredients, source: item });
+      });
+      
+      // Process each line
+      lines.forEach(function(line) {
+        var originalLine = line;
+        line = line.toLowerCase().trim();
+        
+        // Extract quantity if present (e.g., "bread 2 loaves", "chicken 1kg")
+        var qtyMatch = line.match(/(\d+)\s*(kg|g|loaves?|packs?|bottles?|items?)?/i);
+        var qty = qtyMatch ? parseInt(qtyMatch[1]) : 1;
+        
+        // Remove quantity from search term
+        var searchTerm = line.replace(/\d+\s*(kg|g|loaves?|packs?|bottles?|items?)?/gi, "").trim();
+        
+        // Try to match
+        var foundMatch = false;
+        for (var i = 0; i < database.length; i++) {
+          var dbItem = database[i];
+          var dbName = dbItem.name.toLowerCase();
+          
+          // Check for match (flexible matching)
+          if (dbName.includes(searchTerm) || searchTerm.includes(dbName.split(" ")[0]) || 
+              (searchTerm.length > 3 && dbName.includes(searchTerm))) {
+            
+            // Check if it's a homemade item with ingredients
+            if (dbItem.isHomemade && dbItem.ingredients) {
+              matched.push({
+                name: dbItem.name,
+                cost: dbItem.cost * qty,
+                category: dbItem.category,
+                qty: qty,
+                breakdown: dbItem.ingredients.join(", "),
+                isHomemade: true
+              });
+            } else {
+              matched.push({
+                name: dbItem.name,
+                cost: dbItem.cost * qty,
+                category: dbItem.category,
+                qty: qty
+              });
+            }
+            total += dbItem.cost * qty;
+            foundMatch = true;
+            break;
+          }
+        }
+        
+        if (!foundMatch) {
+          unmatched.push(originalLine);
+        }
+      });
+      
+      // Render results
+      renderEstimatorResults(matched, unmatched, total);
+    }
+    
+    function renderEstimatorResults(matched, unmatched, total) {
+      var html = "";
+      
+      if (matched.length > 0) {
+        // Group by category
+        var byCategory = {};
+        matched.forEach(function(item) {
+          if (!byCategory[item.category]) byCategory[item.category] = [];
+          byCategory[item.category].push(item);
+        });
+        
+        // Render each category
+        Object.keys(byCategory).forEach(function(cat) {
+          html += '<div class="estimator-section">';
+          html += '<div class="estimator-section-title">' + cat + '</div>';
+          byCategory[cat].forEach(function(item) {
+            html += '<div class="estimator-item">';
+            html += '<div class="estimator-item-name">' + item.name;
+            if (item.qty > 1) html += '<span class="estimator-item-qty"> x' + item.qty + '</span>';
+            if (item.isHomemade) html += '<div style="font-size:11px;color:#6b7280;margin-top:2px;">Made from: ' + item.breakdown + '</div>';
+            html += '</div>';
+            html += '<div class="estimator-item-cost">₪' + item.cost + '</div>';
+            html += '</div>';
+          });
+          html += '</div>';
+        });
+        
+        // Total
+        html += '<div class="estimator-total">';
+        html += '<div class="estimator-total-label">Estimated Total</div>';
+        html += '<div class="estimator-total-amount">₪' + total + '</div>';
+        html += '<div style="font-size:12px;margin-top:4px;opacity:0.9;">' + matched.length + ' items matched</div>';
+        html += '</div>';
+      }
+      
+      // Unmatched items
+      if (unmatched.length > 0) {
+        html += '<div class="estimator-unmatched">';
+        html += '<div class="estimator-unmatched-title">⚠️ Not Found (' + unmatched.length + ' items)</div>';
+        html += '<div style="font-size:11px;color:#78350f;margin-top:4px;">These items weren\'t in our database. Add manually or check spelling:</div>';
+        unmatched.forEach(function(item) {
+          html += '<div class="estimator-unmatched-item">• ' + item + '</div>';
+        });
+        html += '</div>';
+      }
+      
+      if (matched.length === 0 && unmatched.length === 0) {
+        html = '<div style="text-align:center;padding:40px;color:#6b7280;">No items to estimate. Paste a shopping list above.</div>';
+      }
+      
+      document.getElementById("estimatorResults").innerHTML = html;
+    }
+
     // Initialize
     loadState();
     renderBudget();
@@ -1486,15 +1857,44 @@
     renderEliaProteins();
     renderFilters();
     renderMeals();
-    renderExport();
+    renderExportSummary(calcTotals());
 
-    // Event listeners
-    document.getElementById("exportBtn").addEventListener("click", function() {
-      state.showExport = !state.showExport;
-      this.textContent = state.showExport ? "✕ Close" : "📤 Export";
-      renderExport();
+    // Tab Navigation
+    document.querySelectorAll(".tab-btn").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        var tabId = this.dataset.tab;
+        
+        // Update active tab button
+        document.querySelectorAll(".tab-btn").forEach(function(b) {
+          b.classList.remove("active");
+        });
+        this.classList.add("active");
+        
+        // Update active tab content
+        document.querySelectorAll(".tab-content").forEach(function(content) {
+          content.classList.remove("active");
+        });
+        document.getElementById("tab-" + tabId).classList.add("active");
+        
+        // Refresh export summary when switching to export tab
+        if (tabId === "export") {
+          renderExportSummary(calcTotals());
+        }
+        
+        // Scroll to top
+        window.scrollTo(0, 0);
+      });
     });
 
+    // Budget expand/collapse
+    document.getElementById("budgetExpandBtn").addEventListener("click", function() {
+      var details = document.getElementById("budgetDetails");
+      var isShown = details.classList.contains("show");
+      details.classList.toggle("show");
+      this.textContent = isShown ? "▼ Details" : "▲ Hide";
+    });
+
+    // Clear button
     document.getElementById("clearBtn").addEventListener("click", function() {
       if (confirm("Clear all selections?")) {
         state.breakfast = [];
@@ -1510,7 +1910,6 @@
         renderEliaProteins();
         renderFilters();
         renderMeals();
-        renderExport();
         showToast("🗑️ Cleared!");
       }
     });
@@ -1526,6 +1925,7 @@
     document.getElementById("downloadCSVBtn").addEventListener("click", downloadCSV);
     document.getElementById("printBtn").addEventListener("click", printPlan);
     document.getElementById("shareBtn").addEventListener("click", sharePlan);
+    document.getElementById("estimateBtn").addEventListener("click", estimateCost);
   </script>
 </body>
 </html>
